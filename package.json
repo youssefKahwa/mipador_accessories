@@ -1,0 +1,59 @@
+{
+  "name": "my-maganti",
+  "homepage": "www.mymaganti.com",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "node --experimental-strip-types scripts/generate-sitemap.mjs && tsc -b && vite build && node --experimental-strip-types scripts/prerender.mjs",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "deploy": "npm run build && gh-pages -d dist"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/leaflet": "^1.9.21",
+    "@types/three": "^0.184.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
+    "i18next": "^26.3.0",
+    "i18next-browser-languagedetector": "^8.2.1",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-i18next": "^17.0.8",
+    "react-leaflet": "^5.0.0",
+    "react-router-dom": "^7.15.1",
+    "swiper": "^12.2.0",
+    "tailwindcss": "^4.2.1",
+    "three": "^0.184.0",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "eslint": "^10.0.0",
+    "eslint-plugin-react-hooks": "7.1.0-canary-47d1ad14-20260216",
+    "eslint-plugin-react-refresh": "^0.5.0",
+    "gh-pages": "^6.3.0",
+    "globals": "^17.6.0",
+    "playwright": "^1.61.0",
+    "sharp": "^0.35.1",
+    "svgo": "^4.0.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.58.1",
+    "vite": "^7.2.4",
+    "vite-plugin-image-optimizer": "^2.0.3",
+    "vitest": "^4.0.18"
+  }
+}

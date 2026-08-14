@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+/* ── Brand design tokens — single source of truth for color & type ───────
+   Change a value here and it propagates everywhere (Tailwind utilities
+   like `text-espresso`, `bg-gold/15`, `border-mist` are auto-generated
+   from these). For non-Tailwind contexts (canvas, SVG, Leaflet), the same
+   values are mirrored in src/config/theme.ts — keep both in sync. ────── */
+@theme {
+  --color-espresso:       #3D1A12; /* primary ink / text */
+  --color-espresso-light: #4D2A22; /* hover / secondary state */
+  --color-espresso-deep:  #2A1814; /* dark nav / footer bg */
+  --color-espresso-950:   #150804; /* darkest bg (hero overlays) */
+  --color-espresso-900:   #2A0F08; /* dark gradient overlay (about sections) */
+  --color-espresso-975:   #1C140F; /* darkest hero gradient stop */
+  --color-clay:           #3D1E16; /* contact section variant */
+  --color-fog:            #F4F4F4; /* light neutral section bg */
+  --color-gold:           #C9922A; /* accent */
+  --color-gold-dark:      #B8821A; /* accent hover */
+  --color-cream:          #F6F4F1; /* primary light bg */
+  --color-linen:          #EFEBE9; /* secondary light bg */
+  --color-mist:           #E6E3DF; /* borders / dividers */
+  --color-taupe:          #746560; /* muted text on light — darkened from #8C7A76 for WCAG AA contrast */
+  --color-tan:            #C6A98B; /* decorative accent */
+  --color-whatsapp:       #25D366; /* functional, not brand */
+  --color-whatsapp-dark:  #1ebe5d;
+
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+}
+
+/* ── Hero CSS animations — zero Framer Motion in the critical paint path ── */
+@keyframes hero-breathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.035); }
+}
+
+@keyframes hero-shine {
+  0%   { transform: translateX(-120%) skewX(-20deg); opacity: 0; }
+  15%  { opacity: 0.35; }
+  85%  { opacity: 0.35; }
+  100% { transform: translateX(220%) skewX(-20deg); opacity: 0; }
+}
+
+@keyframes hero-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes hero-card-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hero-glow-in {
+  from { opacity: 0; }
+  to   { opacity: 0.18; }
+}
+
+.hero-breathe {
+  animation: hero-breathe 22s ease-in-out infinite;
+}
+
+.hero-shine {
+  animation: hero-shine 1.8s 0.5s ease-in-out forwards;
+}
+
+/* text fades use animation-fill-mode: both — starts hidden then fades in */
+.hero-fade-in {
+  animation: hero-fade-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-card-entrance {
+  animation: hero-card-in 0.6s 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-glow-entrance {
+  animation: hero-glow-in 2s ease forwards;
+}
+
+/* ── Navbar entrance — CSS so it never gates FCP behind JS init ─────────── */
+@keyframes nav-slide-down {
+  from { transform: translateY(-20px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+.nav-entrance {
+  animation: nav-slide-down 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.text-gradient-animated {
+  background: linear-gradient(90deg, #ffffff 0%, #fbf4ed 33%, #ffffff 66%, var(--color-cream) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-stroke-soft {
+  -webkit-text-stroke: 0.6px rgba(255, 255, 255, 0.788);
+}
+
+.text-stroke-brand {
+  -webkit-text-stroke: 1.5px var(--color-espresso);
+}
+
+/* ── Perf hint for long below-fold sections — browser skips layout/paint
+   work for content that's off-screen, cutting initial render cost on
+   long pages (About, FAQs). Safe to combine with whileInView animations:
+   the browser un-skips shortly before a section nears the viewport. ─── */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 800px;
+}
+
+/* ── Accessibility — visible keyboard focus ring using the accent token ── */
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ── Respect reduced-motion for the raw CSS keyframe animations above ──── */
+@media (prefers-reduced-motion: reduce) {
+  .hero-breathe,
+  .hero-shine,
+  .hero-fade-in,
+  .hero-card-entrance,
+  .hero-glow-entrance,
+  .nav-entrance {
+    animation: none;
+  }
+}
+
+.text-glow {
+  text-shadow:
+    0 0 20px rgba(198, 169, 139, 0.15),
+    0 0 40px rgba(0, 0, 0, 0.25);
+}

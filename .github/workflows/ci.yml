@@ -1,0 +1,51 @@
+name: 🚀 mipador React+TS CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality-control:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛰️ Checkout Code
+        uses: actions/checkout@v6
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm install
+
+      - name: 🎭 Install Playwright Chromium (used for prerendering)
+        run: npx playwright install --with-deps chromium
+
+      - name: 🔍 Production Build & Type Check
+        run: npm run build
+
+      - name: 🎨 Lint Check
+        run: npm run lint || echo "Linting warnings found, moving to deploy..."
+
+      
+
+  deploy:
+    name: 🌐 Deploy to Vercel
+    needs: quality-control
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛰️ Checkout Code
+        uses: actions/checkout@v6
+
+      - name: 🚀 Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
