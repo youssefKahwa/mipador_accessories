@@ -43,9 +43,9 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
-    "eslint": "^10.0.0",
-    "eslint-plugin-react-hooks": "7.1.0-canary-47d1ad14-20260216",
-    "eslint-plugin-react-refresh": "^0.5.0",
+    "eslint": "^10.9.1",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.5",
     "gh-pages": "^6.3.0",
     "globals": "^17.6.0",
     "playwright": "^1.61.0",
@@ -53,8 +53,8 @@
     "svgo": "^4.0.1",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.58.1",
-    "vite": "^7.2.4",
+    "vite": "^8.2.2",
     "vite-plugin-image-optimizer": "^2.0.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.11"
   }
 }
