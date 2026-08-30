@@ -1,5 +1,5 @@
-# robots.txt — Mipador (https://mipador.com)
-# Updated: 2026-06-14
+# robots.txt — Mipador Accessories (https://accessories.mipador.com)
+# Updated: 2026-08-14
 
 User-agent: *
 Allow: /
@@ -12,4 +12,4 @@ Disallow: /*/order
 # Crawl-delay hint for well-behaved bots
 Crawl-delay: 1
 
-Sitemap: https://mipador.com/sitemap.xml
+Sitemap: https://accessories.mipador.com/sitemap.xml
