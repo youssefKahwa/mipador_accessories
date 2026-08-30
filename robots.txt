@@ -1,0 +1,15 @@
+# robots.txt — Mipador (https://mipador.com)
+# Updated: 2026-06-14
+
+User-agent: *
+Allow: /
+
+# Keep internal/transactional flows out of the index
+Disallow: /*/wishlist
+Disallow: /*/cart
+Disallow: /*/order
+
+# Crawl-delay hint for well-behaved bots
+Crawl-delay: 1
+
+Sitemap: https://mipador.com/sitemap.xml
