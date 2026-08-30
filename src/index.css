@@ -1,30 +1,106 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: <html class="dark"> flips every `dark:` utility.
+   Toggled by src/store/theme.store.ts, persisted to localStorage. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ── Brand design tokens — single source of truth for color & type ───────
    Change a value here and it propagates everywhere (Tailwind utilities
-   like `text-espresso`, `bg-gold/15`, `border-mist` are auto-generated
+   like `text-ink`, `bg-champagne/15`, `border-mist` are auto-generated
    from these). For non-Tailwind contexts (canvas, SVG, Leaflet), the same
-   values are mirrored in src/config/theme.ts — keep both in sync. ────── */
-@theme {
-  --color-espresso:       #3D1A12; /* primary ink / text */
-  --color-espresso-light: #4D2A22; /* hover / secondary state */
-  --color-espresso-deep:  #2A1814; /* dark nav / footer bg */
-  --color-espresso-950:   #150804; /* darkest bg (hero overlays) */
-  --color-espresso-900:   #2A0F08; /* dark gradient overlay (about sections) */
-  --color-espresso-975:   #1C140F; /* darkest hero gradient stop */
-  --color-clay:           #3D1E16; /* contact section variant */
-  --color-fog:            #F4F4F4; /* light neutral section bg */
-  --color-gold:           #C9922A; /* accent */
-  --color-gold-dark:      #B8821A; /* accent hover */
-  --color-cream:          #F6F4F1; /* primary light bg */
-  --color-linen:          #EFEBE9; /* secondary light bg */
-  --color-mist:           #E6E3DF; /* borders / dividers */
-  --color-taupe:          #746560; /* muted text on light — darkened from #8C7A76 for WCAG AA contrast */
-  --color-tan:            #C6A98B; /* decorative accent */
-  --color-whatsapp:       #25D366; /* functional, not brand */
-  --color-whatsapp-dark:  #1ebe5d;
+   values are mirrored in src/config/theme.ts — keep both in sync.
 
-  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+   Palette logic: deep navy ink + a sapphire→azure→ice blue gradient carry
+   the brand; champagne gold is the one warm accent (dial-hand-on-blue-face
+   contrast), used sparingly for CTAs, badges and focus states.
+
+   Light/dark split — two families of "dark" tokens that mean different
+   things:
+   - `chrome*` — the brand's permanently-dark surfaces (navbar, footer,
+     hero, primary buttons/badges). These do NOT change with the theme
+     toggle, the same way a brand-colored button stays brand-colored in
+     both light and dark mode on most sites.
+   - `ink`/`frost`/`cloud`/`haze`/`mist`/`slate` — page content tokens.
+     These DO flip under `.dark` below, since they represent "page text"
+     and "page surface", which should invert with the theme. ─────────── */
+@theme {
+  --color-chrome:          #0B1224; /* fixed — never flips with theme */
+  --color-chrome-light:    #16213E;
+  --color-chrome-deep:     #060912;
+
+  --color-ink:             #0B1224; /* primary text — flips light in dark mode */
+  --color-ink-light:       #16213E;
+  --color-ink-deep:        #060912;
+  --color-ink-950:         #04060D;
+  --color-ink-900:         #0A1330;
+  --color-ink-975:         #05070F;
+
+  --color-sapphire-deep:   #0F2459; /* contact section variant, deep saturated blue */
+  --color-sapphire:        #1E3FA0; /* core brand blue — primary buttons, links */
+  --color-azure:           #2F6FE0; /* mid gradient blue */
+  --color-ice:             #6FB1FF; /* bright highlight blue — gradient tops, glow */
+
+  --color-champagne:       #C9A455; /* the one warm accent — CTAs, badges, focus */
+  --color-champagne-dark:  #AC8A42; /* accent hover */
+
+  --color-haze:            #F1F4F9; /* light neutral section bg — flips dark */
+  --color-frost:           #F7F9FC; /* primary page bg, cool white — flips dark */
+  --color-cloud:           #EAF0F8; /* secondary page bg, pale blue — flips dark */
+  --color-mist:            #D8E1EC; /* borders / dividers — flips dark */
+  --color-slate:           #50617D; /* muted text on light — flips dark */
+
+  --color-platinum:        #B6C2D1; /* decorative metal accent */
+  --color-whatsapp:        #25D366; /* functional, not brand */
+  --color-whatsapp-dark:   #1ebe5d;
+
+  --color-surface:         #FFFFFF; /* elevated card bg (was literal `bg-white`) — flips dark */
+
+  --font-display: "Bodoni Moda", "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* ── Dark mode overrides — page content tokens only, see split note above ── */
+:root.dark {
+  --color-ink:             #F4F7FB; /* page text — near-white */
+  --color-ink-light:       #C7D2E0;
+  --color-ink-deep:        #FFFFFF;
+  --color-ink-950:         #FFFFFF;
+  --color-ink-900:         #E7ECF3;
+  --color-ink-975:         #FFFFFF;
+
+  --color-haze:            #0D1730; /* page bg — dark navy */
+  --color-frost:           #0A1226;
+  --color-cloud:           #101B38;
+  --color-mist:            #24304F; /* borders on dark */
+  --color-slate:           #9BAAC4; /* muted text on dark */
+
+  --color-surface:         #141F3D; /* elevated card bg on dark pages */
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-frost);
+  color-scheme: light;
+}
+:root.dark body {
+  color-scheme: dark;
+}
+
+/* ── Brand gradient utilities — the recurring "blue hour" gradient ──────── */
+.bg-gradient-brand {
+  background-image: linear-gradient(135deg, var(--color-chrome) 0%, var(--color-sapphire) 55%, var(--color-ice) 100%);
+}
+
+.bg-gradient-brand-deep {
+  background-image: linear-gradient(160deg, var(--color-chrome-deep) 0%, var(--color-chrome) 45%, var(--color-sapphire-deep) 100%);
+}
+
+.text-gradient-brand {
+  background: linear-gradient(100deg, var(--color-sapphire) 0%, var(--color-azure) 45%, var(--color-ice) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* ── Hero CSS animations — zero Framer Motion in the critical paint path ── */
@@ -76,6 +152,71 @@
   animation: hero-glow-in 2s ease forwards;
 }
 
+/* ── Hero background carousel — slow continuous zoom on every slide so
+   crossfades always land mid-motion instead of on a static frame ─────── */
+@keyframes hero-kenburns {
+  0%   { transform: scale(1); }
+  100% { transform: scale(1.14); }
+}
+
+.hero-kenburns {
+  animation: hero-kenburns 9s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-kenburns {
+    animation: none;
+  }
+}
+
+/* ── Hero CSS animations — zero Framer Motion in the critical paint path ── */
+@keyframes hero-breathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.035); }
+}
+
+@keyframes hero-shine {
+  0%   { transform: translateX(-120%) skewX(-20deg); opacity: 0; }
+  15%  { opacity: 0.35; }
+  85%  { opacity: 0.35; }
+  100% { transform: translateX(220%) skewX(-20deg); opacity: 0; }
+}
+
+@keyframes hero-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes hero-card-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hero-glow-in {
+  from { opacity: 0; }
+  to   { opacity: 0.18; }
+}
+
+.hero-breathe {
+  animation: hero-breathe 22s ease-in-out infinite;
+}
+
+.hero-shine {
+  animation: hero-shine 1.8s 0.5s ease-in-out forwards;
+}
+
+.hero-fade-in {
+  animation: hero-fade-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-card-entrance {
+  animation: hero-card-in 0.6s 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-glow-entrance {
+  animation: hero-glow-in 2s ease forwards;
+}
+
 /* ── Navbar entrance — CSS so it never gates FCP behind JS init ─────────── */
 @keyframes nav-slide-down {
   from { transform: translateY(-20px); opacity: 0; }
@@ -87,7 +228,7 @@
 }
 
 .text-gradient-animated {
-  background: linear-gradient(90deg, #ffffff 0%, #fbf4ed 33%, #ffffff 66%, var(--color-cream) 100%);
+  background: linear-gradient(90deg, #ffffff 0%, #dce8fb 33%, #ffffff 66%, var(--color-frost) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -98,7 +239,7 @@
 }
 
 .text-stroke-brand {
-  -webkit-text-stroke: 1.5px var(--color-espresso);
+  -webkit-text-stroke: 1.5px var(--color-ink);
 }
 
 /* ── Perf hint for long below-fold sections — browser skips layout/paint
@@ -112,7 +253,7 @@
 
 /* ── Accessibility — visible keyboard focus ring using the accent token ── */
 :focus-visible {
-  outline: 2px solid var(--color-gold);
+  outline: 2px solid var(--color-champagne);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -131,6 +272,67 @@
 
 .text-glow {
   text-shadow:
-    0 0 20px rgba(198, 169, 139, 0.15),
+    0 0 20px rgba(111, 177, 255, 0.2),
     0 0 40px rgba(0, 0, 0, 0.25);
+}
+
+/* ── Instrument-panel system — the signature visual language of this
+   brand: a watch is a precision instrument, so the UI reads like one
+   (technical grid, hairlines, tabular figures) rather than a soft
+   lifestyle boutique. ─────────────────────────────────────────────── */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Faint engineering-drafting grid — replaces soft color-blur "ambient"
+   backgrounds with something that reads as technical, not decorative. */
+.bg-blueprint-grid {
+  background-image:
+    linear-gradient(var(--color-mist) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-mist) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.bg-blueprint-grid-dark {
+  background-image:
+    linear-gradient(rgba(182, 194, 209, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(182, 194, 209, 0.08) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Small caps "figure label" caption — FIG. 01, REF. MG-041, etc. */
+.fig-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+  width: max-content;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee { animation: none; }
+}
+
+@keyframes seconds-sweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.seconds-hand {
+  animation: seconds-sweep 60s steps(60) infinite;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .seconds-hand { animation: none; }
 }

@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { products as allProductsData } from "../data/products";
+import type { AccessoryType } from "../data/products";
 export type { Product } from "../data/products";
 
 type SortBy = "featured" | "price-asc" | "price-desc" | "name";
-type LocationFilter = "all" | "indoor" | "outdoor";
+type GenderFilter = "all" | "men" | "women" | "unisex";
 
 export interface CartItem {
   productId: string;
@@ -16,9 +17,10 @@ interface ProductStore {
 
   // Filters
   searchQuery: string;
+  selectedAccessoryType: AccessoryType | "All";
   selectedCategory: string;
   selectedCollection: string;
-  locationFilter: LocationFilter;
+  genderFilter: GenderFilter;
   sortBy: SortBy;
   inStockOnly: boolean;
   currentPage: number;
@@ -35,9 +37,10 @@ interface ProductStore {
 
   // Actions
   setSearchQuery: (q: string) => void;
+  setSelectedAccessoryType: (type: AccessoryType | "All") => void;
   setSelectedCategory: (cat: string) => void;
   setSelectedCollection: (col: string) => void;
-  setLocationFilter: (loc: LocationFilter) => void;
+  setGenderFilter: (g: GenderFilter) => void;
   setSortBy: (s: SortBy) => void;
   setInStockOnly: (v: boolean) => void;
   setCurrentPage: (p: number) => void;
@@ -64,6 +67,7 @@ interface ProductStore {
   // Derived
   getFilteredProducts: () => typeof allProductsData;
   getTotalPages: (perPage: number) => number;
+  getAllAccessoryTypes: () => (AccessoryType | "All")[];
   getAllCategories: () => string[];
   getAllCollections: () => string[];
   hasActiveFilters: () => boolean;
@@ -71,9 +75,10 @@ interface ProductStore {
 
 const defaultFilters = {
   searchQuery: "",
+  selectedAccessoryType: "All" as AccessoryType | "All",
   selectedCategory: "All",
   selectedCollection: "All",
-  locationFilter: "all" as LocationFilter,
+  genderFilter: "all" as GenderFilter,
   sortBy: "featured" as SortBy,
   inStockOnly: false,
   currentPage: 1,
@@ -90,9 +95,10 @@ export const useProductStore = create<ProductStore>()(
       quickViewId: null,
 
       setSearchQuery: (q) => set({ searchQuery: q, currentPage: 1 }),
+      setSelectedAccessoryType: (type) => set({ selectedAccessoryType: type, selectedCategory: "All", currentPage: 1 }),
       setSelectedCategory: (cat) => set({ selectedCategory: cat, currentPage: 1 }),
       setSelectedCollection: (col) => set({ selectedCollection: col, currentPage: 1 }),
-      setLocationFilter: (loc) => set({ locationFilter: loc, currentPage: 1 }),
+      setGenderFilter: (g) => set({ genderFilter: g, currentPage: 1 }),
       setSortBy: (s) => set({ sortBy: s }),
       setInStockOnly: (v) => set({ inStockOnly: v, currentPage: 1 }),
       setCurrentPage: (p) => set({ currentPage: p }),
@@ -150,19 +156,21 @@ export const useProductStore = create<ProductStore>()(
       setQuickViewId: (id) => set({ quickViewId: id }),
 
       getFilteredProducts: () => {
-        const { allProducts, searchQuery, selectedCategory, selectedCollection, locationFilter, sortBy, inStockOnly } = get();
+        const { allProducts, searchQuery, selectedAccessoryType, selectedCategory, selectedCollection, genderFilter, sortBy, inStockOnly } = get();
         return allProducts
           .filter((p) => {
             const matchSearch =
               p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
               p.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
               p.collection.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              p.subcategory.toLowerCase().includes(searchQuery.toLowerCase()) ||
               p.materials.some((m) => m.toLowerCase().includes(searchQuery.toLowerCase()));
-            const matchCategory = selectedCategory === "All" || p.category === selectedCategory;
+            const matchAccessoryType = selectedAccessoryType === "All" || p.accessoryType === selectedAccessoryType;
+            const matchCategory = selectedCategory === "All" || p.subcategory === selectedCategory;
             const matchCollection = selectedCollection === "All" || p.collection === selectedCollection;
-            const matchLocation = locationFilter === "all" || p.location === locationFilter;
+            const matchGender = genderFilter === "all" || p.gender === genderFilter || p.gender === "unisex";
             const matchStock = inStockOnly ? p.inStock : true;
-            return matchSearch && matchCategory && matchCollection && matchLocation && matchStock;
+            return matchSearch && matchAccessoryType && matchCategory && matchCollection && matchGender && matchStock;
           })
           .sort((a, b) => {
             if (sortBy === "price-asc") return a.price - b.price;
@@ -175,11 +183,16 @@ export const useProductStore = create<ProductStore>()(
       },
 
       getTotalPages: (perPage) => Math.ceil(get().getFilteredProducts().length / perPage),
-      getAllCategories: () => ["All", ...Array.from(new Set(get().allProducts.map((p) => p.category)))],
+      getAllAccessoryTypes: () => ["All", ...Array.from(new Set(get().allProducts.map((p) => p.accessoryType)))],
+      getAllCategories: () => {
+        const { allProducts, selectedAccessoryType } = get();
+        const scoped = selectedAccessoryType === "All" ? allProducts : allProducts.filter((p) => p.accessoryType === selectedAccessoryType);
+        return ["All", ...Array.from(new Set(scoped.map((p) => p.subcategory)))];
+      },
       getAllCollections: () => ["All", ...Array.from(new Set(get().allProducts.map((p) => p.collection)))],
       hasActiveFilters: () => {
-        const { searchQuery, selectedCategory, selectedCollection, locationFilter, inStockOnly } = get();
-        return searchQuery !== "" || selectedCategory !== "All" || selectedCollection !== "All" || locationFilter !== "all" || inStockOnly;
+        const { searchQuery, selectedAccessoryType, selectedCategory, selectedCollection, genderFilter, inStockOnly } = get();
+        return searchQuery !== "" || selectedAccessoryType !== "All" || selectedCategory !== "All" || selectedCollection !== "All" || genderFilter !== "all" || inStockOnly;
       },
     }),
     {

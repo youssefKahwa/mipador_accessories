@@ -60,7 +60,7 @@ export function CustomCursor() {
   return (
     <motion.div
       aria-hidden="true"
-      className="fixed top-0 left-0 z-[9999] pointer-events-none rounded-full border border-gold"
+      className="fixed top-0 left-0 z-[9999] pointer-events-none rounded-full border border-champagne"
       style={{ x: springX, y: springY, translateX: "-50%", translateY: "-50%" }}
       animate={{
         width: hovering ? 46 : 20,

@@ -2,11 +2,36 @@ import React from "react";
 import type { Product } from "../../../../store/product.store";
 import { useProductStore } from "../../../../store/product.store";
 import { useParams, Link } from "react-router-dom";
-import { Bookmark, Heart } from "lucide-react";
+import { Bookmark, Heart, Cog, Ruler, Droplets, Tag, ShieldCheck } from "lucide-react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { toWebp } from "../../../../utils/image";
 import { localizeProduct } from "../../../../utils/localizeProduct";
+import { ProductVisual } from "../../../../components/ProductVisual";
+import { getRefCode } from "../../../../utils/refCode";
+
+// Two quick facts per non-watch line for the hover spec strip — mirrors the
+// movement/diameter/water-resistance strip watches get, without needing a
+// bespoke layout per accessory type.
+function nonWatchSpecSummary(product: Product): [string, string] | null {
+  const specs = product.specs;
+  switch (specs.kind) {
+    case "sunglasses":
+    case "eyeglasses":
+      return [specs.frameMaterial, specs.uvProtection ?? specs.lensType ?? specs.warranty];
+    case "jewelry":
+      return [specs.metal, specs.stone ?? (specs.hypoallergenic ? "Hypoallergenic" : specs.warranty)];
+    case "bags":
+      return [specs.material, specs.closureType ?? specs.warranty];
+    case "scarves":
+      return [specs.fabric, `${specs.dimensions.length}×${specs.dimensions.width}cm`];
+    case "belts":
+      return [specs.material, specs.buckleType ?? specs.warranty];
+    case "hats":
+      return [specs.material, specs.sizeRange[0] ?? specs.warranty];
+    default:
+      return null;
+  }
+}
 
 const ProductCard: React.FC<{ product: Product }> = ({ product: rawProduct }) => {
   const { addToCart, toggleWishlist } = useProductStore();
@@ -62,116 +87,116 @@ const ProductCard: React.FC<{ product: Product }> = ({ product: rawProduct }) =>
           onMouseMove={isUnavailable ? undefined : handleTiltMove}
           onMouseLeave={isUnavailable ? undefined : handleTiltLeave}
           style={isUnavailable ? undefined : { rotateX, rotateY, transformPerspective: 700 }}
-          className="relative aspect-[3/4] rounded-xl bg-linen overflow-hidden shadow-sm transition-shadow duration-500 group-hover:shadow-[0_16px_48px_rgba(61,26,18,0.12)]">
+          className="relative aspect-[4/5] rounded-md bg-cloud overflow-hidden border border-ink/8 transition-all duration-300 group-hover:border-ink/20 group-hover:shadow-[0_16px_48px_rgba(11,18,36,0.14)]">
 
           {/* Badges */}
-          <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
+          <div className="absolute top-2.5 left-2.5 z-20 flex flex-col gap-1">
             {product.tags.includes("new") && (
-              <span className="px-2.5 py-1 bg-gold text-espresso text-[9px] font-black uppercase tracking-widest rounded-xl">
+              <span className="px-2 py-1 bg-champagne text-ink font-mono text-[8.5px] font-bold uppercase tracking-widest rounded-sm">
                 {t("card.new")}
               </span>
             )}
             {product.tags.includes("bestseller") && (
-              <span className="px-2.5 py-1 bg-espresso text-white text-[9px] font-black uppercase tracking-widest rounded-xl">
+              <span className="px-2 py-1 bg-chrome text-white font-mono text-[8.5px] font-bold uppercase tracking-widest rounded-sm">
                 {t("card.bestseller")}
               </span>
             )}
             {isComingSoon && (
-              <span className="px-2.5 py-1 bg-white/90 text-espresso text-[9px] font-black uppercase tracking-widest rounded-xl">
+              <span className="px-2 py-1 bg-white/90 text-ink font-mono text-[8.5px] font-bold uppercase tracking-widest rounded-sm">
                 {t("card.comingSoon")}
               </span>
             )}
             {isOutOfStock && (
-              <span className="px-2.5 py-1 bg-white/90 text-espresso/65 text-[9px] font-black uppercase tracking-widest rounded-xl">
+              <span className="px-2 py-1 bg-white/90 text-ink/65 font-mono text-[8.5px] font-bold uppercase tracking-widest rounded-sm">
                 {t("card.soldOut")}
               </span>
             )}
           </div>
 
-          {/* Location badge */}
-          <div className="absolute top-3 right-3 z-20 px-2.5 py-1 bg-white/80 backdrop-blur-md rounded-xl">
-            <p className="text-[9px] font-black uppercase tracking-widest text-espresso/65">
-              {product.location}
+          {/* Reference code */}
+          <div className="absolute top-2.5 right-2.5 z-20 px-2 py-1 bg-ink/70 backdrop-blur-sm rounded-sm">
+            <p className="font-mono text-[8px] font-bold uppercase tracking-widest text-white/80">
+              {getRefCode(product)}
             </p>
           </div>
 
           {/* Image */}
-          <div
-            className={`w-full h-full transition-all duration-700 ${
-              !isUnavailable && "group-hover:scale-105"
-            } ${isComingSoon ? "blur-lg opacity-40" : ""}`}
-          >
-            {product.images[0] ? (
-              <picture style={{ display: "contents" }}>
-                <source
-                  srcSet={toWebp(product.images[0])}
-                  type="image/webp"
-                  sizes="(max-width: 640px) calc(100vw - 32px), (max-width: 1024px) calc(50vw - 56px), 370px"
-                />
-                <img
-                  src={product.images[0]}
-                  alt={product.name}
-                  loading="lazy"
-                  decoding="async"
-                  sizes="(max-width: 640px) calc(100vw - 32px), (max-width: 1024px) calc(50vw - 56px), 370px"
-                  className="w-full h-full object-cover"
-                />
-              </picture>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <p className="text-espresso/65 text-xs font-black uppercase tracking-widest">
-                  {product.collection}
-                </p>
-              </div>
-            )}
+          <div className={`w-full h-full transition-all duration-700 ${isComingSoon ? "blur-lg opacity-40" : ""}`}>
+            <ProductVisual
+              src={product.images[0]}
+              alt={product.name}
+              dialColor={product.colorSwatches?.[0]}
+              strapColor={product.colorSwatches?.[1] ?? product.colorSwatches?.[0]}
+              accessoryType={product.accessoryType}
+              categoryLabel={product.subcategory}
+              imgClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              containerClassName="w-full h-full"
+            />
           </div>
 
-          {/* Desktop hover — view details cue */}
-          {!isUnavailable && (
-            <div className="absolute inset-0 bg-espresso/15 opacity-0 group-hover:opacity-100 transition-all duration-300 hidden md:flex items-end justify-center pb-6">
-              <span className="bg-white text-espresso text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-xl shadow-sm">
-                {t("card.viewDetails")}
-              </span>
+          {/* Hover-reveal spec strip — replaces the old tilt/"view details" gimmick. */}
+          {!isUnavailable && product.specs.kind === "watches" && (
+            <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out bg-ink/92 backdrop-blur-sm hidden md:flex items-center justify-around py-3 px-2">
+              <div className="flex flex-col items-center gap-1">
+                <Cog size={13} className="text-white/50" />
+                <span className="font-mono text-[8px] text-white/70 uppercase tracking-wider">{t(`product.movement.${product.specs.movement}`)}</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Ruler size={13} className="text-white/50" />
+                <span className="font-mono text-[8px] text-white/70 uppercase tracking-wider">{product.specs.caseDiameter}mm</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Droplets size={13} className="text-white/50" />
+                <span className="font-mono text-[8px] text-white/70 uppercase tracking-wider">{product.specs.waterResistance}</span>
+              </div>
+            </div>
+          )}
+          {!isUnavailable && product.specs.kind !== "watches" && nonWatchSpecSummary(product) && (
+            <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out bg-ink/92 backdrop-blur-sm hidden md:flex items-center justify-around py-3 px-2">
+              <div className="flex flex-col items-center gap-1">
+                <Tag size={13} className="text-white/50" />
+                <span className="font-mono text-[8px] text-white/70 uppercase tracking-wider">{nonWatchSpecSummary(product)![0]}</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <ShieldCheck size={13} className="text-white/50" />
+                <span className="font-mono text-[8px] text-white/70 uppercase tracking-wider">{nonWatchSpecSummary(product)![1]}</span>
+              </div>
             </div>
           )}
 
           {/* Wishlist toggle */}
           <motion.button
             onClick={handleWishlist}
-            whileTap={{ scale: 1.3 }}
+            whileTap={{ scale: 1.25 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
             aria-label={wishlisted ? t("wishlist.remove") : t("wishlist.add")}
-            className="absolute bottom-2 right-2 z-30 w-11 h-11 rounded-xl bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
+            className="absolute bottom-2.5 right-2.5 z-30 w-9 h-9 rounded-sm bg-white/85 backdrop-blur-sm flex items-center justify-center hover:bg-surface transition-colors border border-ink/8"
           >
             <Heart
-              size={14}
-              className={`transition-all duration-200 ${
-                wishlisted
-                  ? "text-espresso fill-espresso"
-                  : "text-espresso/65"
-              }`}
+              size={13}
+              className={`transition-all duration-200 ${wishlisted ? "text-ink fill-ink" : "text-ink/65"}`}
             />
           </motion.button>
         </motion.div>
 
         {/* Info */}
-        <div className="mt-4 flex flex-col">
-          <p className="text-espresso/65 text-[9px] font-black uppercase tracking-[0.25em]">
+        <div className="mt-3.5 flex flex-col">
+          <p className="text-ink/50 font-mono text-[8.5px] font-bold uppercase tracking-[0.2em]">
             {product.collection}
           </p>
-          <h3 className="text-sm font-black text-espresso tracking-tight mt-1">
+          <h3 className="text-sm font-black text-ink tracking-tight mt-1">
             {product.name}
           </h3>
-          <p className="text-espresso/65 text-xs italic mt-0.5 leading-relaxed">
+          <p className="text-ink/60 text-xs italic mt-0.5 leading-relaxed">
             {product.tagline}
           </p>
 
-          <div className="flex items-center justify-between mt-3">
-            <p className="text-espresso font-black text-sm">
+          <div className="flex items-center justify-between mt-2.5">
+            <p className="font-mono text-ink font-bold text-sm tabular-nums">
               {product.price.toLocaleString()} MAD
             </p>
             {!isUnavailable && (
-              <p className="text-espresso/65 text-[9px] uppercase tracking-wider">
+              <p className="text-ink/50 font-mono text-[8.5px] uppercase tracking-wider">
                 {product.leadTime}
               </p>
             )}
@@ -181,10 +206,10 @@ const ProductCard: React.FC<{ product: Product }> = ({ product: rawProduct }) =>
           <button
             onClick={handleAddToCart}
             disabled={isUnavailable}
-            className={`mt-3 w-full py-2.5 text-[9px] font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${
+            className={`mt-3 w-full py-2.5 font-mono text-[9px] font-bold uppercase tracking-widest rounded-sm border flex items-center justify-center gap-2 transition-all duration-300 ${
               isUnavailable
-                ? "bg-espresso/8 text-espresso/65 cursor-not-allowed"
-                : "bg-espresso text-white hover:bg-espresso-light active:scale-95"
+                ? "bg-ink/5 border-ink/8 text-ink/40 cursor-not-allowed"
+                : "bg-chrome border-ink text-white hover:bg-chrome-light active:scale-[0.97]"
             }`}
           >
             {isComingSoon ? (

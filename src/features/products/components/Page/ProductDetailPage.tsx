@@ -5,9 +5,11 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   ArrowLeft, ShoppingBag, ChevronLeft, ChevronRight,
   Check, AlertTriangle, Clock, Minus, Plus, Star, X,
+  Cog, Droplets, ShieldCheck,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { products } from "../../../../data/products";
+import type { AccessoryType } from "../../../../data/products";
 import { localizeProduct } from "../../../../utils/localizeProduct";
 import { getProductReviews, getAvgRating } from "../../../../data/reviews";
 import { useProductStore } from "../../../../store/product.store";
@@ -17,8 +19,12 @@ import TrustBadges from "../../../../components/TrustBadges";
 import { useSEO, useJsonLd } from "../../../../hooks/useSEO";
 import { ReviewsSection } from "../Reviews/ReviewsSection";
 import { RoomVisualizer } from "../../../../components/RoomVisualizer";
-import { DimensionDiagram } from "../../../../components/DimensionDiagram";
-import { toWebp } from "../../../../utils/image";
+import { WatchSizeDiagram } from "../../../../components/WatchSizeDiagram";
+import { DispatchCountdown } from "../../../../components/DispatchCountdown";
+import { ProductVisual } from "../../../../components/ProductVisual";
+import { SITE } from "../../../../config/site";
+
+const SITE_URL = SITE.url;
 
 // ── Helpers ───────────────────────────────────────────────
 const clampPan = (z: number, x: number, y: number) => {
@@ -33,7 +39,11 @@ const ImageLightbox: React.FC<{
   setIndex: (i: number) => void;
   onClose: () => void;
   productName: string;
-}> = ({ images, index, setIndex, onClose, productName }) => {
+  dialColor?: string;
+  strapColor?: string;
+  accessoryType?: AccessoryType;
+  categoryLabel?: string;
+}> = ({ images, index, setIndex, onClose, productName, dialColor, strapColor, accessoryType, categoryLabel }) => {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -246,22 +256,17 @@ const ImageLightbox: React.FC<{
                 willChange: "transform",
               }}
             >
-              <picture style={{ display: "contents" }}>
-                <source srcSet={toWebp(img)} type="image/webp" />
-                <img
-                  src={img}
-                  alt={`${productName} — ${index + 1}`}
-                  draggable={false}
-                  style={{
-                    maxWidth: "90vw",
-                    maxHeight: "78vh",
-                    objectFit: "contain",
-                    display: "block",
-                    userSelect: "none",
-                    pointerEvents: "none",
-                  }}
-                />
-              </picture>
+              <ProductVisual
+                src={img}
+                alt={`${productName} — ${index + 1}`}
+                dialColor={dialColor}
+                strapColor={strapColor}
+                variant={index}
+                accessoryType={accessoryType}
+                categoryLabel={categoryLabel}
+                imgClassName="max-w-[90vw] max-h-[78vh] object-contain block select-none pointer-events-none"
+                containerClassName="w-[62vw] max-w-[440px] aspect-[4/5] max-h-[78vh]"
+              />
             </div>
           </motion.div>
         </AnimatePresence>
@@ -304,10 +309,17 @@ const ImageLightbox: React.FC<{
                 i === index ? "ring-white opacity-100" : "ring-transparent opacity-30 hover:opacity-60"
               }`}
             >
-              <picture style={{ display: "contents" }}>
-                <source srcSet={toWebp(th)} type="image/webp" />
-                <img src={th} alt={`${productName} ${i + 1}`} loading="lazy" className="w-full h-full object-cover" />
-              </picture>
+              <ProductVisual
+                src={th}
+                alt={`${productName} ${i + 1}`}
+                dialColor={dialColor}
+                strapColor={strapColor}
+                variant={i}
+                accessoryType={accessoryType}
+                categoryLabel={categoryLabel}
+                imgClassName="w-full h-full object-cover"
+                containerClassName="w-full h-full"
+              />
             </button>
           ))}
         </div>
@@ -325,18 +337,18 @@ const DetailSection: React.FC<{
 }> = ({ label, defaultOpen = false, children }) => {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-t border-espresso/8">
+    <div className="border-t border-ink/8">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className="flex w-full items-center justify-between py-4 text-left"
       >
-        <span className="text-[10px] font-black uppercase tracking-widest text-espresso/65">
+        <span className="text-[10px] font-black uppercase tracking-widest text-ink/65">
           {label}
         </span>
         <span
           className={`shrink-0 w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-200 ${
-            open ? "bg-espresso text-white" : "bg-espresso/8 text-espresso/65"
+            open ? "bg-chrome text-white" : "bg-ink/8 text-ink/65"
           }`}
         >
           {open ? <Minus size={10} /> : <Plus size={10} />}
@@ -371,9 +383,9 @@ const StockAlert: React.FC<{ stock: number }> = ({ stock }) => {
 
   if (stock <= 8) {
     return (
-      <div className="flex items-center gap-2 bg-gold/8 border border-gold/20 rounded-xl px-4 py-3">
-        <Clock size={14} className="text-gold shrink-0" />
-        <p className="text-xs font-black text-espresso uppercase tracking-wider">
+      <div className="flex items-center gap-2 bg-champagne/8 border border-champagne/20 rounded-xl px-4 py-3">
+        <Clock size={14} className="text-champagne shrink-0" />
+        <p className="text-xs font-black text-ink uppercase tracking-wider">
           {t("product.lowStock", { count: stock })}
         </p>
       </div>
@@ -402,13 +414,13 @@ const StarRating: React.FC<{ rating: number; count: number }> = ({ rating, count
             size={13}
             className={
               n <= Math.round(rating)
-                ? "text-gold fill-gold"
-                : "text-espresso/65"
+                ? "text-champagne fill-champagne"
+                : "text-ink/65"
             }
           />
         ))}
       </div>
-      <p className="text-xs text-espresso/65 font-light">
+      <p className="text-xs text-ink/65 font-light">
         {count > 0
           ? `${rating.toFixed(1)} · ${t("reviews.count", { count })}`
           : t("reviews.noReviews")}
@@ -416,6 +428,14 @@ const StarRating: React.FC<{ rating: number; count: number }> = ({ rating, count
     </div>
   );
 };
+
+// ── Small spec tile ─────────────────────────────────────────
+const SpecTile: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <div className="bg-surface rounded-xl px-4 py-3 border border-ink/8">
+    <p className="text-[9px] font-black uppercase tracking-widest text-ink/65 mb-0.5">{label}</p>
+    <p className="text-sm font-black text-ink">{value}</p>
+  </div>
+);
 
 // ── Main page ─────────────────────────────────────────────
 const ProductDetailPage: React.FC = () => {
@@ -428,14 +448,15 @@ const ProductDetailPage: React.FC = () => {
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [zoomed, setZoomed] = useState(false);
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
+  const orderBoxRef = useRef<HTMLDivElement>(null);
+  const [orderBoxVisible, setOrderBoxVisible] = useState(true);
 
   const rawProduct = products.find((p) => p.slug === slug);
   const product = rawProduct ? localizeProduct(rawProduct, currentLang) : undefined;
   const productReviews = getProductReviews(product?.id ?? "");
   const avgRating = getAvgRating(product?.id ?? "");
-
-  const SITE_URL = "https://mipador.com";
 
   const productOgImage = product?.images[0]
     ? product.images[0].startsWith("http")
@@ -449,13 +470,13 @@ const ProductDetailPage: React.FC = () => {
       ? `${product.name} — ${product.tagline}`
       : t("product.notFound"),
     product
-      ? `${product.description} Made by Mipador Studio. ${product.materials.join(", ")}.`
+      ? `${product.description} Made by ${SITE.brandName}. ${product.materials.join(", ")}.`
       : undefined,
     product
       ? {
           ogImage: productOgImage,
           ogType: "product",
-          imageAlt: `${product.name} — ${product.tagline} | Mipador`,
+          imageAlt: `${product.name} — ${product.tagline} | ${SITE.brandName}`,
         }
       : undefined
   );
@@ -492,16 +513,16 @@ const ProductDetailPage: React.FC = () => {
       ),
       "brand": {
         "@type": "Brand",
-        "name": "Mipador",
+        "name": SITE.brandName,
         "@id": `${SITE_URL}/#organization`,
       },
       "manufacturer": {
         "@type": "Organization",
-        "name": "Mipador",
+        "name": SITE.brandName,
         "@id": `${SITE_URL}/#organization`,
       },
       "material": product.materials.join(", "),
-      "category": product.category,
+      "category": `${product.accessoryType}/${product.subcategory}`,
       "offers": {
         "@type": "Offer",
         "priceCurrency": "MAD",
@@ -512,7 +533,7 @@ const ProductDetailPage: React.FC = () => {
         "itemCondition": "https://schema.org/NewCondition",
         "seller": {
           "@type": "Organization",
-          "name": "Mipador",
+          "name": SITE.brandName,
           "@id": `${SITE_URL}/#organization`,
         },
       },
@@ -568,15 +589,27 @@ const ProductDetailPage: React.FC = () => {
   }, [product, productReviews, avgRating, currentLang]);
   useJsonLd(jsonLdSchema);
 
+  // Sticky mobile buy bar appears once the main order box scrolls off-screen
+  useEffect(() => {
+    const el = orderBoxRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setOrderBoxVisible(entry.isIntersecting),
+      { threshold: 0.05 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [product?.id]);
+
   if (!product) {
     return (
-      <div className="min-h-screen bg-cream flex flex-col items-center justify-center text-center px-6">
-        <p className="text-espresso/65 font-black text-sm uppercase tracking-widest mb-6">
+      <div className="min-h-screen bg-frost flex flex-col items-center justify-center text-center px-6">
+        <p className="text-ink/65 font-black text-sm uppercase tracking-widest mb-6">
           {t("product.notFound")}
         </p>
         <Link
           to={`/${currentLang}/products`}
-          className="text-[10px] font-black uppercase tracking-widest text-gold border-b border-gold/40 pb-0.5"
+          className="text-[10px] font-black uppercase tracking-widest text-champagne border-b border-champagne/40 pb-0.5"
         >
           {t("product.backToCollection")}
         </Link>
@@ -590,6 +623,9 @@ const ProductDetailPage: React.FC = () => {
   const stock = product.stock ?? 12;
   const totalPrice = product.price * quantity;
   const currentImage = product.images[imgIndex];
+  const dialColor = product.colorSwatches?.[selectedColorIndex] ?? product.colorSwatches?.[0];
+  const strapColor =
+    product.colorSwatches?.[selectedColorIndex === 0 ? 1 : 0] ?? product.colorSwatches?.[0];
 
   const handleAddToCart = () => {
     if (!isUnavailable) {
@@ -603,12 +639,12 @@ const ProductDetailPage: React.FC = () => {
     .filter(
       (p) =>
         p.id !== product.id &&
-        (p.collection === product.collection || p.category === product.category)
+        (p.collection === product.collection || p.subcategory === product.subcategory)
     )
     .slice(0, 3);
 
   return (
-    <div className="relative min-h-screen bg-cream overflow-hidden">
+    <div className="relative min-h-screen bg-frost overflow-hidden">
       <ScrollToTop />
 
       {/* ── Image lightbox ── */}
@@ -620,6 +656,10 @@ const ProductDetailPage: React.FC = () => {
             setIndex={setImgIndex}
             onClose={() => setZoomed(false)}
             productName={product.name}
+            dialColor={dialColor}
+            strapColor={strapColor}
+            accessoryType={product.accessoryType}
+            categoryLabel={product.subcategory}
           />
         )}
       </AnimatePresence>
@@ -629,7 +669,7 @@ const ProductDetailPage: React.FC = () => {
         {/* Back */}
         <Link
           to={`/${currentLang}/products`}
-          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-espresso/65 hover:text-espresso transition-colors mb-8 md:mb-14"
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-ink/65 hover:text-ink transition-colors mb-8 md:mb-14"
         >
           <ArrowLeft size={13} /> {t("product.backToCollection")}
         </Link>
@@ -652,14 +692,21 @@ const ProductDetailPage: React.FC = () => {
                       onClick={() => setImgIndex(i)}
                       className={`w-full aspect-[4/5] rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                         i === imgIndex
-                          ? "border-espresso opacity-100"
+                          ? "border-ink opacity-100"
                           : "border-transparent opacity-35 hover:opacity-65"
                       }`}
                     >
-                      <picture style={{ display: "contents" }}>
-                        <source srcSet={toWebp(img)} type="image/webp" />
-                        <img src={img} alt={`${product.name} — ${i + 1}`} loading="lazy" className="w-full h-full object-cover" />
-                      </picture>
+                      <ProductVisual
+                        src={img}
+                        alt={`${product.name} — ${i + 1}`}
+                        dialColor={dialColor}
+                        strapColor={strapColor}
+                        variant={i}
+                        accessoryType={product.accessoryType}
+                        categoryLabel={product.subcategory}
+                        imgClassName="w-full h-full object-cover"
+                        containerClassName="w-full h-full"
+                      />
                     </button>
                   ))}
                 </div>
@@ -667,7 +714,7 @@ const ProductDetailPage: React.FC = () => {
 
               {/* Main image */}
               <div
-                className="relative flex-1 aspect-[4/5] rounded-xl bg-linen overflow-hidden cursor-zoom-in"
+                className="relative flex-1 aspect-[4/5] rounded-xl bg-cloud overflow-hidden cursor-zoom-in"
                 onClick={() => setZoomed(true)}
                 onKeyDown={(e) => e.key === "Enter" && setZoomed(true)}
                 tabIndex={0}
@@ -687,42 +734,37 @@ const ProductDetailPage: React.FC = () => {
                 {/* Animated image transition */}
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
-                    key={imgIndex}
+                    key={`${imgIndex}-${selectedColorIndex}`}
                     className="absolute inset-0"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.22 }}
                   >
-                    {currentImage ? (
-                      <picture style={{ display: "contents" }}>
-                        <source srcSet={toWebp(currentImage)} type="image/webp" />
-                        <img
-                          src={currentImage}
-                          alt={product.name}
-                          className="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.015]"
-                        />
-                      </picture>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <p className="text-espresso/65 text-xs font-black uppercase tracking-widest">
-                          {product.collection}
-                        </p>
-                      </div>
-                    )}
+                    <ProductVisual
+                      src={currentImage}
+                      alt={product.name}
+                      dialColor={dialColor}
+                      strapColor={strapColor}
+                      variant={imgIndex}
+                      accessoryType={product.accessoryType}
+                      categoryLabel={product.subcategory}
+                      imgClassName="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.015]"
+                      containerClassName="w-full h-full"
+                    />
                   </motion.div>
                 </AnimatePresence>
 
                 {/* Badges */}
                 {isUnavailable && (
                   <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur rounded-xl pointer-events-none">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-espresso">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-ink">
                       {isComingSoon ? t("card.comingSoon") : t("card.soldOut")}
                     </p>
                   </div>
                 )}
                 {product.tags.includes("bestseller") && (
-                  <div className="absolute top-4 right-4 px-3 py-1 bg-espresso rounded-xl pointer-events-none">
+                  <div className="absolute top-4 right-4 px-3 py-1 bg-chrome rounded-xl pointer-events-none">
                     <p className="text-[9px] font-black uppercase tracking-widest text-white">
                       {t("card.bestseller")}
                     </p>
@@ -735,18 +777,18 @@ const ProductDetailPage: React.FC = () => {
                     <button
                       onClick={(e) => { e.stopPropagation(); setImgIndex((i) => Math.max(0, i - 1)); }}
                       disabled={imgIndex === 0}
-                      className="md:hidden absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/85 rounded-xl flex items-center justify-center disabled:opacity-0 hover:bg-white transition-all duration-200"
+                      className="md:hidden absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/85 rounded-xl flex items-center justify-center disabled:opacity-0 hover:bg-surface transition-all duration-200"
                       aria-label="Previous image"
                     >
-                      <ChevronLeft size={15} className="text-espresso" />
+                      <ChevronLeft size={15} className="text-ink" />
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setImgIndex((i) => Math.min(product.images.length - 1, i + 1)); }}
                       disabled={imgIndex === product.images.length - 1}
-                      className="md:hidden absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/85 rounded-xl flex items-center justify-center disabled:opacity-0 hover:bg-white transition-all duration-200"
+                      className="md:hidden absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/85 rounded-xl flex items-center justify-center disabled:opacity-0 hover:bg-surface transition-all duration-200"
                       aria-label="Next image"
                     >
-                      <ChevronRight size={15} className="text-espresso" />
+                      <ChevronRight size={15} className="text-ink" />
                     </button>
                   </>
                 )}
@@ -758,7 +800,7 @@ const ProductDetailPage: React.FC = () => {
                       <div
                         key={i}
                         className={`transition-all duration-300 rounded-full ${
-                          i === imgIndex ? "bg-white w-5 h-1.5" : "bg-white/40 w-1.5 h-1.5"
+                          i === imgIndex ? "bg-surface w-5 h-1.5" : "bg-white/40 w-1.5 h-1.5"
                         }`}
                       />
                     ))}
@@ -783,14 +825,21 @@ const ProductDetailPage: React.FC = () => {
                     onClick={() => setImgIndex(i)}
                     className={`shrink-0 w-[68px] h-[68px] rounded-xl overflow-hidden border-2 transition-all snap-start ${
                       i === imgIndex
-                        ? "border-espresso opacity-100"
+                        ? "border-ink opacity-100"
                         : "border-transparent opacity-40 hover:opacity-70"
                     }`}
                   >
-                    <picture style={{ display: "contents" }}>
-                      <source srcSet={toWebp(img)} type="image/webp" />
-                      <img src={img} alt={`${product.name} — ${i + 1}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                    </picture>
+                    <ProductVisual
+                      src={img}
+                      alt={`${product.name} — ${i + 1}`}
+                      dialColor={dialColor}
+                      strapColor={strapColor}
+                      variant={i}
+                      accessoryType={product.accessoryType}
+                      categoryLabel={product.subcategory}
+                      imgClassName="w-full h-full object-cover"
+                      containerClassName="w-full h-full"
+                    />
                   </button>
                 ))}
               </div>
@@ -802,18 +851,20 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Header */}
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-espresso/65 mb-2">
-                {product.collection} · {product.location}
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-ink/65 mb-2">
+                {product.collection} · {product.subcategory}
               </p>
-              <h1 className="text-2xl md:text-4xl font-black text-espresso tracking-tight leading-tight">
+              <h1 className="text-2xl md:text-4xl font-black text-ink tracking-tight leading-tight">
                 {product.name}
               </h1>
-              <p className="text-espresso/65 italic text-sm mt-1.5">
+              <p className="text-ink/65 italic text-sm mt-1.5">
                 {product.tagline}
               </p>
-              <p className="text-espresso/65 text-[11px] font-black uppercase tracking-widest mt-2.5">
-                {product.dimensions.width} × {product.dimensions.height} cm
-              </p>
+              {product.specs.kind === "watches" && (
+                <p className="text-ink/65 text-[11px] font-black uppercase tracking-widest mt-2.5">
+                  {product.specs.caseDiameter}mm · {t(`product.movement.${product.specs.movement}`)}
+                </p>
+              )}
             </div>
 
             {/* Rating */}
@@ -821,18 +872,75 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Price */}
             <div>
-              <p className="text-3xl font-black text-espresso">
+              <p className="text-3xl font-black text-ink">
                 {product.price.toLocaleString()} MAD
               </p>
               {quantity > 1 && (
-                <p className="text-sm text-espresso/65 mt-1 font-light">
+                <p className="text-sm text-ink/65 mt-1 font-light">
                   × {quantity} ={" "}
-                  <span className="font-black text-espresso">
+                  <span className="font-black text-ink">
                     {totalPrice.toLocaleString()} MAD
                   </span>
                 </p>
               )}
             </div>
+
+            {/* Quick specs — instant credibility scan */}
+            <div className="grid grid-cols-3 gap-2">
+              {product.specs.kind === "watches" && (
+                <>
+                  <div className="flex flex-col items-center gap-1.5 bg-surface rounded-xl border border-ink/8 py-3 px-1">
+                    <Cog size={16} className="text-ink/45" />
+                    <span className="text-[8.5px] font-black uppercase tracking-wider text-ink/65 text-center leading-tight">
+                      {t(`product.movement.${product.specs.movement}`)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1.5 bg-surface rounded-xl border border-ink/8 py-3 px-1">
+                    <Droplets size={16} className="text-ink/45" />
+                    <span className="text-[8.5px] font-black uppercase tracking-wider text-ink/65 text-center leading-tight">
+                      {product.specs.waterResistance}
+                    </span>
+                  </div>
+                </>
+              )}
+              <div className="flex flex-col items-center gap-1.5 bg-surface rounded-xl border border-ink/8 py-3 px-1">
+                <ShieldCheck size={16} className="text-ink/45" />
+                <span className="text-[8.5px] font-black uppercase tracking-wider text-ink/65 text-center leading-tight">
+                  {product.specs.warranty}
+                </span>
+              </div>
+            </div>
+
+            {/* Colorway picker — swaps the visual, feeds the order message */}
+            {product.colors.length > 1 && (
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-ink/65 mb-2.5">
+                  {t("product.colorway")}:{" "}
+                  <span className="text-ink normal-case font-bold">
+                    {product.colors[selectedColorIndex]}
+                  </span>
+                </p>
+                <div className="flex gap-2.5">
+                  {product.colors.map((c, i) => {
+                    const hex = product.colorSwatches?.[i];
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedColorIndex(i)}
+                        aria-label={c}
+                        aria-pressed={selectedColorIndex === i}
+                        className={`w-9 h-9 rounded-full border-2 transition-all duration-200 ${
+                          selectedColorIndex === i
+                            ? "border-ink scale-110"
+                            : "border-transparent hover:border-ink/25"
+                        }`}
+                        style={{ backgroundColor: hex ?? "#9AA5B5" }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Stock alert */}
             {!isUnavailable && <StockAlert stock={stock} />}
@@ -842,38 +950,40 @@ const ProductDetailPage: React.FC = () => {
 
             {/* ── ORDER FORM ── */}
             {!isUnavailable && (
-              <div className="bg-white rounded-xl p-5 border border-espresso/8 flex flex-col gap-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-espresso/65">
+              <div ref={orderBoxRef} className="bg-surface rounded-xl p-5 border border-ink/8 flex flex-col gap-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-ink/65">
                   {t("product.orderThisPiece")}
                 </p>
 
+                <DispatchCountdown className="flex items-center gap-2 text-[11px] font-bold text-ink bg-champagne/8 border border-champagne/20 rounded-lg px-3 py-2.5 w-fit" />
+
                 {/* Quantity selector */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-espresso/65">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-ink/65">
                     {t("product.quantity")}
                   </label>
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-3 bg-cream rounded-xl p-1.5">
+                    <div className="flex items-center gap-3 bg-frost rounded-xl p-1.5">
                       <button
                         onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white transition-colors"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors"
                         aria-label="Decrease quantity"
                       >
-                        <Minus size={13} className="text-espresso" />
+                        <Minus size={13} className="text-ink" />
                       </button>
-                      <span className="text-sm font-black text-espresso w-6 text-center">
+                      <span className="text-sm font-black text-ink w-6 text-center">
                         {quantity}
                       </span>
                       <button
                         onClick={() => setQuantity((q) => Math.min(stock || 10, q + 1))}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white transition-colors"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors"
                         aria-label="Increase quantity"
                       >
-                        <Plus size={13} className="text-espresso" />
+                        <Plus size={13} className="text-ink" />
                       </button>
                     </div>
                     {stock > 0 && stock <= 8 && (
-                      <p className="text-[10px] text-espresso font-black uppercase tracking-wider">
+                      <p className="text-[10px] text-ink font-black uppercase tracking-wider">
                         {t("product.countAvailable", { count: stock })}
                       </p>
                     )}
@@ -889,6 +999,8 @@ const ProductDetailPage: React.FC = () => {
                   }]}
                   total={totalPrice}
                   onSuccess={() => setQuantity(1)}
+                  engravingAvailable={product.engravingAvailable}
+                  selectedColor={product.colors[selectedColorIndex]}
                 />
 
                 {/* Add to cart — secondary CTA */}
@@ -897,8 +1009,8 @@ const ProductDetailPage: React.FC = () => {
                   disabled={added}
                   className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 border ${
                     added
-                      ? "bg-gold/10 border-gold/30 text-gold"
-                      : "bg-transparent border-espresso/15 text-espresso/65 hover:border-espresso/30 hover:text-espresso"
+                      ? "bg-champagne/10 border-champagne/30 text-champagne"
+                      : "bg-transparent border-ink/15 text-ink/65 hover:border-ink/30 hover:text-ink"
                   }`}
                 >
                   {added ? (
@@ -912,7 +1024,7 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Unavailable state */}
             {isUnavailable && (
-              <div className="w-full py-4 rounded-xl bg-espresso/8 text-espresso/65 text-[10px] font-black uppercase tracking-widest text-center">
+              <div className="w-full py-4 rounded-xl bg-ink/8 text-ink/65 text-[10px] font-black uppercase tracking-widest text-center">
                 {isComingSoon
                   ? t("product.unavailableComingSoon")
                   : t("product.unavailableSoldOut")}
@@ -929,44 +1041,41 @@ const ProductDetailPage: React.FC = () => {
         <div className="mt-14 md:mt-20 grid grid-cols-1 md:grid-cols-2 md:gap-x-16 lg:gap-x-24">
           <div>
             <DetailSection label={t("product.aboutThisPiece")} defaultOpen>
-              <p className="text-espresso/65 text-sm leading-relaxed font-light">
+              <p className="text-ink/65 text-sm leading-relaxed font-light">
                 {product.description}
               </p>
             </DetailSection>
 
-            <DetailSection label={t("product.dimensions")} defaultOpen>
-              <DimensionDiagram
-                width={product.dimensions.width}
-                height={product.dimensions.height}
-                depth={product.dimensions.depth}
-                className="mb-5"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: "W", value: `${product.dimensions.width} cm` },
-                  { label: "D", value: `${product.dimensions.depth} cm` },
-                  { label: "H", value: `${product.dimensions.height} cm` },
-                  { label: "kg", value: `${product.dimensions.weight} kg` },
-                ].map(({ label, value }) => (
-                  <div
-                    key={label}
-                    className="bg-white rounded-xl px-4 py-3 border border-espresso/8"
-                  >
-                    <p className="text-[9px] font-black uppercase tracking-widest text-espresso/65 mb-0.5">
-                      {label}
-                    </p>
-                    <p className="text-sm font-black text-espresso">{value}</p>
+            {product.specs.kind === "watches" && (
+              <>
+                <DetailSection label={t("product.specSheet")} defaultOpen>
+                  <WatchSizeDiagram
+                    caseDiameter={product.specs.caseDiameter}
+                    caseThickness={product.specs.caseThickness}
+                    lugToLug={product.specs.lugToLug}
+                    weight={product.specs.weight}
+                  />
+                </DetailSection>
+
+                <DetailSection label={t("product.movementSpecs")}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <SpecTile label={t("product.specMovement")} value={t(`product.movement.${product.specs.movement}`)} />
+                    <SpecTile label={t("product.specWaterResistance")} value={product.specs.waterResistance} />
+                    {product.specs.powerReserve && (
+                      <SpecTile label={t("product.specPowerReserve")} value={product.specs.powerReserve} />
+                    )}
+                    <SpecTile label={t("product.specWarranty")} value={product.specs.warranty} />
                   </div>
-                ))}
-              </div>
-            </DetailSection>
+                </DetailSection>
+              </>
+            )}
 
             <DetailSection label={t("product.materials")}>
               <div className="flex flex-wrap gap-2">
                 {product.materials.map((m, i) => (
                   <span
                     key={i}
-                    className="px-3 py-1 bg-white border border-espresso/10 rounded-xl text-[10px] font-black uppercase tracking-wider text-espresso/65"
+                    className="px-3 py-1 bg-surface border border-ink/10 rounded-xl text-[10px] font-black uppercase tracking-wider text-ink/65"
                   >
                     {m}
                   </span>
@@ -975,57 +1084,29 @@ const ProductDetailPage: React.FC = () => {
             </DetailSection>
           </div>
 
-          <div className="border-t border-espresso/8 md:border-t-0 mt-1 md:mt-0">
+          <div className="border-t border-ink/8 md:border-t-0 mt-1 md:mt-0">
             <DetailSection label={t("product.care")}>
               <ul className="space-y-2">
                 {product.care.map((c, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-2 text-sm text-espresso/65 font-light"
+                    className="flex items-start gap-2 text-sm text-ink/65 font-light"
                   >
-                    <span className="text-gold shrink-0 font-black mt-0.5">·</span>
+                    <span className="text-champagne shrink-0 font-black mt-0.5">·</span>
                     {c}
                   </li>
                 ))}
               </ul>
             </DetailSection>
 
-            {product.colors.length > 0 && (
-              <DetailSection
-                label={
-                  product.category === "Wall Art"
-                    ? t("product.colorPalette")
-                    : t("product.availableIn")
-                }
-              >
-                <div className="flex flex-wrap gap-2.5">
-                  {product.colors.map((c, i) => {
-                    const hex = product.colorSwatches?.[i];
-                    return (
-                      <span
-                        key={i}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-espresso/10 rounded-xl text-xs font-bold text-espresso/70"
-                      >
-                        {hex && (
-                          <span
-                            className="w-3.5 h-3.5 rounded-full border border-espresso/10 shrink-0"
-                            style={{ backgroundColor: hex }}
-                            aria-hidden="true"
-                          />
-                        )}
-                        {c}
-                      </span>
-                    );
-                  })}
-                </div>
-              </DetailSection>
-            )}
-
             <DetailSection label={t("product.leadTime")}>
-              <div className="space-y-2">
-                <p className="text-sm text-espresso/65 font-light">
+              <div className="space-y-3">
+                <p className="text-sm text-ink/65 font-light">
                   {t("product.leadTimeValue", { time: product.leadTime })}
                 </p>
+                {!isUnavailable && (
+                  <DispatchCountdown className="inline-flex items-center gap-2 text-xs font-bold text-ink bg-champagne/8 border border-champagne/20 rounded-lg px-3 py-2.5" />
+                )}
               </div>
             </DetailSection>
 
@@ -1044,11 +1125,11 @@ const ProductDetailPage: React.FC = () => {
         {/* ── Related products ── */}
         {related.length > 0 && (
           <div className="mt-20 md:mt-32">
-            <div className="border-t border-espresso/10 pt-12 mb-10">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-espresso/65 mb-2">
+            <div className="border-t border-ink/10 pt-12 mb-10">
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-ink/65 mb-2">
                 {t("product.youMayAlsoLike")}
               </p>
-              <h2 className="text-2xl md:text-3xl font-black text-espresso tracking-tight">
+              <h2 className="text-2xl md:text-3xl font-black text-ink tracking-tight">
                 {t("product.fromTheSameWorld")}
               </h2>
             </div>
@@ -1062,37 +1143,30 @@ const ProductDetailPage: React.FC = () => {
                   className="flex flex-col group shrink-0 w-[70vw] sm:w-[48vw] md:w-auto snap-start"
                   onClick={() => {
                     setImgIndex(0);
+                    setSelectedColorIndex(0);
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                 >
-                  <div className="aspect-[3/4] rounded-xl bg-linen overflow-hidden">
-                    {p.images[0] ? (
-                      <picture style={{ display: "contents" }}>
-                        <source srcSet={toWebp(p.images[0])} type="image/webp" />
-                        <img
-                          src={p.images[0]}
-                          alt={p.name}
-                          loading="lazy"
-                          decoding="async"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
-                        />
-                      </picture>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <p className="text-espresso/65 text-xs font-black uppercase tracking-widest">
-                          {p.collection}
-                        </p>
-                      </div>
-                    )}
+                  <div className="aspect-[3/4] rounded-xl bg-cloud overflow-hidden">
+                    <ProductVisual
+                      src={p.images[0]}
+                      alt={p.name}
+                      dialColor={p.colorSwatches?.[0]}
+                      strapColor={p.colorSwatches?.[1] ?? p.colorSwatches?.[0]}
+                      accessoryType={p.accessoryType}
+                      categoryLabel={p.subcategory}
+                      imgClassName="w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
+                      containerClassName="w-full h-full"
+                    />
                   </div>
                   <div className="mt-3">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-espresso/65">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-ink/65">
                       {p.collection}
                     </p>
-                    <p className="text-sm font-black text-espresso tracking-tight mt-1">
+                    <p className="text-sm font-black text-ink tracking-tight mt-1">
                       {p.name}
                     </p>
-                    <p className="text-sm font-black text-espresso mt-1.5">
+                    <p className="text-sm font-black text-ink mt-1.5">
                       {p.price.toLocaleString()} MAD
                     </p>
                   </div>
@@ -1103,6 +1177,34 @@ const ProductDetailPage: React.FC = () => {
         )}
 
       </div>
+
+      {/* ── Sticky mobile buy bar — appears once the order box scrolls off ── */}
+      <AnimatePresence>
+        {!isUnavailable && !orderBoxVisible && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-ink/10 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-4 py-3 flex items-center gap-3"
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-widest text-ink/50 truncate">
+                {product.name}
+              </p>
+              <p className="text-sm font-black text-ink">
+                {product.price.toLocaleString()} MAD
+              </p>
+            </div>
+            <button
+              onClick={() => orderBoxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              className="shrink-0 bg-chrome text-white text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-xl active:scale-95 transition-transform"
+            >
+              {t("product.orderThisPiece")}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

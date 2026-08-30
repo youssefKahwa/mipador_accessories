@@ -1,24 +1,24 @@
 const PrivacyPolicy = () => {
   return (
-    <div className="min-h-screen bg-cream font-sans text-espresso antialiased selection:bg-gold/10">
+    <div className="min-h-screen bg-frost font-sans text-ink antialiased selection:bg-champagne/10">
       <main className="max-w-4xl mx-auto px-6 py-32 md:py-48">
 
         {/* Header */}
         <header className="mb-24">
-          <div className="text-[10px] uppercase tracking-[0.4em] text-espresso/65 mb-8">
-            Mipador · Privacy
+          <div className="text-[10px] uppercase tracking-[0.4em] text-ink/65 mb-8">
+            Mipador Accessories · Privacy
           </div>
           <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-tight mb-8">
             Your data.
             <br />
-            <span className="text-espresso/65 font-light italic">
+            <span className="text-ink/65 font-light italic">
               Handled with intention.
             </span>
           </h1>
-          <p className="max-w-md text-espresso/65 font-light leading-relaxed">
-            We believe in slow, honest relationships — with furniture, with spaces,
+          <p className="max-w-md text-ink/65 font-light leading-relaxed">
+            We believe in honest, precise relationships — with watches, with time,
             and with the people who trust us. We only collect what is necessary
-            to bring a Mipador piece into your home.
+            to bring a Mipador Accessories watch to your wrist.
           </p>
         </header>
 
@@ -41,7 +41,7 @@ const PrivacyPolicy = () => {
               number: "03",
               label: "Security",
               title: "Protected at every step",
-              body: "All payments are processed through encrypted gateways. Mipador never stores sensitive financial data internally. When your order is complete, the transaction closes cleanly.",
+              body: "All payments are processed through encrypted gateways. Mipador Accessories never stores sensitive financial data internally. When your order is complete, the transaction closes cleanly.",
             },
             {
               number: "04",
@@ -52,18 +52,18 @@ const PrivacyPolicy = () => {
           ].map((s) => (
             <section
               key={s.number}
-              className="grid md:grid-cols-2 gap-12 border-t border-espresso/10 pt-12"
+              className="grid md:grid-cols-2 gap-12 border-t border-ink/10 pt-12"
             >
               <div>
-                <span className="text-[10px] font-black tracking-widest text-espresso/65 uppercase">
+                <span className="text-[10px] font-black tracking-widest text-ink/65 uppercase">
                   {s.number} / {s.label}
                 </span>
               </div>
               <div className="space-y-4">
-                <h3 className="text-2xl font-black text-espresso tracking-tight">
+                <h3 className="text-2xl font-black text-ink tracking-tight">
                   {s.title}
                 </h3>
-                <p className="text-espresso/65 leading-relaxed font-light text-sm">
+                <p className="text-ink/65 leading-relaxed font-light text-sm">
                   {s.body}
                 </p>
               </div>

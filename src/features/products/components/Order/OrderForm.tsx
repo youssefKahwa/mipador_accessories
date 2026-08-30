@@ -14,6 +14,8 @@ interface OrderFormProps {
   lines: OrderLine[];
   total: number;
   onSuccess?: () => void;
+  engravingAvailable?: boolean;
+  selectedColor?: string;
 }
 
 interface FieldProps {
@@ -29,7 +31,7 @@ const Field: React.FC<FieldProps> = ({
   label, placeholder, type = "text", value, error, onChange,
 }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-[10px] font-black uppercase tracking-widest text-espresso/65">
+    <label className="text-[10px] font-black uppercase tracking-widest text-ink/65">
       {label}
     </label>
     <input
@@ -37,10 +39,10 @@ const Field: React.FC<FieldProps> = ({
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`w-full bg-cream rounded-xl px-4 py-3 text-sm text-espresso placeholder-espresso/25 outline-none border transition-all ${
+      className={`w-full bg-frost rounded-xl px-4 py-3 text-sm text-ink placeholder-ink/25 outline-none border transition-all ${
         error
           ? "border-red-300"
-          : "border-espresso/10 focus:border-espresso/30"
+          : "border-ink/10 focus:border-ink/30"
       }`}
     />
     {error && (
@@ -67,34 +69,34 @@ const PaymentOption: React.FC<{
     disabled={disabled}
     className={`relative flex items-center gap-3 w-full rounded-xl border px-4 py-3 text-left transition-all duration-200 ${
       disabled
-        ? "opacity-40 cursor-not-allowed bg-cream border-espresso/8"
+        ? "opacity-40 cursor-not-allowed bg-frost border-ink/8"
         : selected
-        ? "border-espresso bg-espresso/5 shadow-[0_0_0_1px_var(--color-espresso)]"
-        : "border-espresso/15 bg-cream hover:border-espresso/30"
+        ? "border-ink bg-ink/5 shadow-[0_0_0_1px_var(--color-ink)]"
+        : "border-ink/15 bg-frost hover:border-ink/30"
     }`}
   >
     <div className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
-      selected ? "bg-espresso text-white" : "bg-white text-espresso/65"
+      selected ? "bg-chrome text-white" : "bg-surface text-ink/65"
     }`}>
       {icon}
     </div>
     <div className="flex-1 min-w-0">
       <p className={`text-xs font-black uppercase tracking-widest ${
-        selected ? "text-espresso" : "text-espresso/65"
+        selected ? "text-ink" : "text-ink/65"
       }`}>
         {label}
       </p>
-      <p className="text-[10px] text-espresso/65 font-light mt-0.5">{desc}</p>
+      <p className="text-[10px] text-ink/65 font-light mt-0.5">{desc}</p>
     </div>
     {!disabled && (
       <div className={`shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
-        selected ? "border-espresso bg-espresso" : "border-espresso/25"
+        selected ? "border-ink bg-chrome" : "border-ink/25"
       }`}>
         {selected && <Check size={8} className="text-white" strokeWidth={3} />}
       </div>
     )}
     {badge && (
-      <span className="absolute top-2 right-2 px-2 py-0.5 bg-gold/15 text-gold text-[8px] font-black uppercase tracking-widest rounded-lg">
+      <span className="absolute top-2 right-2 px-2 py-0.5 bg-champagne/15 text-champagne text-[8px] font-black uppercase tracking-widest rounded-lg">
         {badge}
       </span>
     )}
@@ -102,12 +104,14 @@ const PaymentOption: React.FC<{
 );
 
 // ── Main form ──────────────────────────────────────────────
-const OrderForm: React.FC<OrderFormProps> = ({ lines, total, onSuccess }) => {
+const OrderForm: React.FC<OrderFormProps> = ({ lines, total, onSuccess, engravingAvailable, selectedColor }) => {
   const { t } = useTranslation();
   const [form, setForm] = useState({ name: "", phone: "", city: "", address: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [wantEngraving, setWantEngraving] = useState(false);
+  const [engraving, setEngraving] = useState("");
   // CoD is the only active option; "online" is a B2 placeholder
   const [paymentMethod] = useState<"cod" | "online">("cod");
 
@@ -134,8 +138,14 @@ const OrderForm: React.FC<OrderFormProps> = ({ lines, total, onSuccess }) => {
       .map((l) => `• ${l.name} (${l.collection}) × ${l.quantity} — ${(l.price * l.quantity).toLocaleString()} MAD`)
       .join("\n");
 
+    const colorLine = selectedColor ? `Colorway: ${selectedColor}\n` : "";
+    const engravingLine =
+      engravingAvailable && wantEngraving && engraving.trim()
+        ? `Engraving: "${engraving.trim()}"\n`
+        : "";
+
     const message =
-`Hello Mipador,
+`Hello Mipador Accessories,
 
 I would like to place an order.
 
@@ -145,7 +155,7 @@ Phone: ${form.phone}
 City: ${form.city}
 Address: ${form.address}
 Payment: ${paymentMethod === "cod" ? t("order.cod") : t("order.onlinePayment")}
-──────────────────
+${colorLine}${engravingLine}──────────────────
 
 Order:
 ${productLines}
@@ -168,14 +178,14 @@ Please confirm availability. Thank you.`;
   if (sent) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center gap-3">
-        <div className="w-12 h-12 rounded-xl bg-espresso/8 flex items-center justify-center">
-          <Check size={20} className="text-espresso" />
+        <div className="w-12 h-12 rounded-xl bg-ink/8 flex items-center justify-center">
+          <Check size={20} className="text-ink" />
         </div>
         <div>
-          <p className="text-sm font-black text-espresso tracking-tight">
+          <p className="text-sm font-black text-ink tracking-tight">
             {t("order.successTitle")}
           </p>
-          <p className="text-xs text-espresso/65 mt-1 font-light">
+          <p className="text-xs text-ink/65 mt-1 font-light">
             {t("order.successBody")}
           </p>
         </div>
@@ -188,7 +198,7 @@ Please confirm availability. Thank you.`;
 
       {/* Payment method selector */}
       <div className="flex flex-col gap-2">
-        <p className="text-[10px] font-black uppercase tracking-widest text-espresso/65">
+        <p className="text-[10px] font-black uppercase tracking-widest text-ink/65">
           {t("order.paymentMethod")}
         </p>
         <PaymentOption
@@ -230,10 +240,37 @@ Please confirm availability. Thank you.`;
         />
       </div>
 
+      {/* Free engraving */}
+      {engravingAvailable && (
+        <div className="flex flex-col gap-2 bg-champagne/8 border border-champagne/20 rounded-xl p-3.5">
+          <label className="flex items-center gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={wantEngraving}
+              onChange={(e) => setWantEngraving(e.target.checked)}
+              className="w-4 h-4 accent-ink"
+            />
+            <span className="text-xs font-black uppercase tracking-wider text-ink">
+              {t("order.engravingOffer")}
+            </span>
+          </label>
+          {wantEngraving && (
+            <input
+              type="text"
+              maxLength={20}
+              value={engraving}
+              onChange={(e) => setEngraving(e.target.value)}
+              placeholder={t("order.engravingPlaceholder")}
+              className="w-full bg-surface rounded-lg px-3.5 py-2.5 text-sm text-ink placeholder-ink/30 outline-none border border-ink/10 focus:border-ink/30 transition-all"
+            />
+          )}
+        </div>
+      )}
+
       <button
         onClick={handleSubmit}
         disabled={sending}
-        className="w-full bg-espresso text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-espresso-light active:scale-95 transition-all disabled:opacity-60"
+        className="w-full bg-chrome text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-chrome-light active:scale-95 transition-all disabled:opacity-60"
       >
         {sending ? (
           <><Loader size={13} className="animate-spin" /> {t("order.sending")}</>
@@ -242,7 +279,7 @@ Please confirm availability. Thank you.`;
         )}
       </button>
 
-      <p className="text-center text-[9px] text-espresso/65 uppercase tracking-widest">
+      <p className="text-center text-[9px] text-ink/65 uppercase tracking-widest">
         {t("order.disclaimer")}
       </p>
     </div>

@@ -9,37 +9,37 @@ export const faqData: FAQ[] = [
   // ── Technical Support ────────────────────────────────────────────────────
   {
     id: 1,
-    question: "What materials are Mipador pieces made from?",
+    question: "What materials are Mipador Accessories watches made from?",
     answer:
-      "Our pieces are crafted from carefully selected natural materials — solid walnut, aged brass, hand-woven fabric, and kiln-fired ceramics. Every material is chosen for its longevity, texture, and how it behaves with time. Full material details are listed on each product page.",
+      "Cases are 316L stainless steel, crystals are sapphire (scratch-resistant) or domed acrylic depending on the model, and straps range from genuine leather to rubber to stainless steel bracelets. Every material is listed in full on each product page, under Materials.",
     category: "Technical Support",
   },
   {
     id: 2,
-    question: "How do I care for my Mipador furniture?",
+    question: "How do I care for my watch?",
     answer:
-      "Most wood pieces should be wiped with a dry or lightly damp cloth and kept away from direct prolonged sunlight. Metal accents can be polished with a soft dry cloth. Avoid harsh chemical cleaners. Each product page includes specific care instructions tailored to that piece.",
+      "Keep it away from strong magnets, rinse the case and strap after seawater or sunscreen contact, and have the movement serviced every 4–5 years to keep it accurate. Each product page lists care instructions specific to that watch's movement and materials.",
     category: "Technical Support",
   },
   {
     id: 3,
-    question: "Are Mipador pieces suitable for outdoor use?",
+    question: "Is my watch water resistant?",
     answer:
-      "Some pieces are designed specifically for outdoor use with weather-resistant finishes. Each product is clearly labelled Indoor or Outdoor in the catalogue. If you're unsure whether a piece fits your space, reach out — we're happy to advise.",
+      "Water resistance varies by model, from 30m (splash-resistant dress watches) up to 200m (dive-ready). Each product page states the exact rating — check it before swimming, showering, or diving with any piece.",
     category: "Technical Support",
   },
   {
     id: 4,
-    question: "Can I customise the finish, colour, or size of a piece?",
+    question: "Can I get my watch engraved?",
     answer:
-      "For select pieces we offer customisation options — different wood finishes, fabric colours, or sizing. Contact us directly via WhatsApp or email before placing your order and we'll let you know what's possible and the lead time involved.",
+      "Yes — most pieces offer free engraving on the caseback, up to 20 characters, added directly in the order form. It's a nice touch for gifts. Engraving isn't available on our limited-edition pieces.",
     category: "Technical Support",
   },
   {
     id: 5,
-    question: "What does the lead time mean?",
+    question: "What does \"automatic\", \"quartz\", and \"mechanical\" mean?",
     answer:
-      "Lead time is the number of weeks between confirming your order and having the piece ready for delivery. Because many Mipador pieces are made to order, lead times typically range from 2 to 6 weeks depending on the item. The lead time is always shown clearly on the product page.",
+      "Automatic movements wind themselves from the motion of your wrist. Quartz movements run on a battery and are the most accurate day-to-day. Mechanical (hand-wound) movements are wound manually and are the most traditional. Each product page states the movement type clearly.",
     category: "Technical Support",
   },
 
@@ -48,35 +48,35 @@ export const faqData: FAQ[] = [
     id: 6,
     question: "How do I place an order?",
     answer:
-      "Add your chosen piece to the cart, fill in your name, phone number, city, and address, then confirm your order. We'll reach out on WhatsApp within 24 hours to confirm availability, arrange delivery, and answer any last questions — no account required.",
+      "Add your chosen watch to the cart, fill in your name, phone number, city, and address, then confirm your order. We'll reach out on WhatsApp within 24 hours to confirm availability, arrange delivery, and answer any last questions — no account required.",
     category: "Shopping & Orders",
   },
   {
     id: 7,
     question: "Do you deliver across Morocco?",
     answer:
-      "Yes. We deliver to all major cities and regions across Morocco. Delivery costs 150 MAD and is calculated at checkout. For remote areas, our team will confirm logistics with you directly before finalising the order.",
+      "Yes. We deliver to all major cities and regions across Morocco. Delivery costs 200 MAD, or is free above 6,000 MAD, calculated automatically at checkout.",
     category: "Shopping & Orders",
   },
   {
     id: 8,
     question: "Can I track my order after it's confirmed?",
     answer:
-      "Once your order ships, we send you the carrier tracking number via WhatsApp. For made-to-order pieces, we'll keep you updated at each production milestone so you always know where your piece is in the process.",
+      "Once your order ships, we send you the carrier tracking number via WhatsApp. Most in-stock pieces ship within 24 hours of confirmation.",
     category: "Shopping & Orders",
   },
   {
     id: 9,
-    question: "What if my piece arrives damaged?",
+    question: "What if my watch arrives damaged?",
     answer:
-      "We pack every order with care, but if something arrives damaged, photograph it immediately and send us the photos via WhatsApp or email within 48 hours of delivery. We'll arrange a replacement or full refund — no questions asked.",
+      "We pack every order securely, but if something arrives damaged, photograph it immediately and send us the photos via WhatsApp or email within 48 hours of delivery. We'll arrange a replacement or full refund — no questions asked.",
     category: "Shopping & Orders",
   },
   {
     id: 10,
     question: "Can I cancel or change my order?",
     answer:
-      "You can cancel or modify a made-to-order piece free of charge within 24 hours of confirmation. After production begins we cannot always accommodate changes, but contact us as early as possible and we'll do our best.",
+      "You can cancel or modify your order free of charge any time before it ships — usually within 24 hours of confirmation. Contact us as early as possible and we'll do our best to accommodate changes.",
     category: "Shopping & Orders",
   },
 
@@ -85,7 +85,7 @@ export const faqData: FAQ[] = [
     id: 11,
     question: "What payment methods do you accept?",
     answer:
-      "We currently accept Cash on Delivery (pay when your piece arrives) and orders via WhatsApp with payment arranged directly with our team. Online card payment will be available soon.",
+      "We currently accept Cash on Delivery (pay when your watch arrives) and orders via WhatsApp with payment arranged directly with our team. Online card payment will be available soon.",
     category: "Payment & billing",
   },
   {
@@ -99,14 +99,14 @@ export const faqData: FAQ[] = [
     id: 13,
     question: "Are there any hidden fees?",
     answer:
-      "No. The price you see on the product page is the price you pay. The only additional cost is the fixed delivery fee of 150 MAD, shown clearly in your cart before you confirm.",
+      "No. The price you see on the product page is the price you pay. The only additional cost is delivery — 200 MAD, or free above 6,000 MAD — shown clearly in your cart before you confirm.",
     category: "Payment & billing",
   },
   {
     id: 14,
     question: "What is your return and refund policy?",
     answer:
-      "We offer a 7-day return window from delivery. If the piece isn't right for your space, contact us within 7 days and we'll arrange a collection and full refund. Items must be in their original condition. See our full Refund Policy for details.",
+      "We offer a 7-day return window from delivery. If the watch isn't right for you, contact us within 7 days and we'll arrange a collection and full refund. The piece must be unworn and in its original packaging. See our full Refund Policy for details.",
     category: "Payment & billing",
   },
   {

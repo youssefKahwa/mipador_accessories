@@ -1,8 +1,16 @@
-// Central place to swap the logo, hero imagery, or social links without
-// hunting through Navbar/Footer/Hero components. Everything here points
-// into /public/images — replace a file there and update the path below.
+// Central place for brand identity + social links.
+// NOTE on imagery: hero, category/gender tiles, and product photos are still
+// plain <img> tags pointing at placeholder files under /public/images — drop
+// in real photography with the same filenames to replace them. Product
+// visuals still fall back to a code-drawn WatchIllustration/LiveDial if a
+// file is ever missing (see ProductVisual.tsx). The logo is the real Mipador
+// mark, shared with home.mipador.com and mipador.com — see /images/LogoNav*
+// and /images/LogoFooter* — don't swap these for a placeholder.
 export const SITE = {
-  brandName: "Mipador",
+  brandName: "Mipador Accessories",
+  brandShort: "Mipador",
+  brandTagline: "Details, well kept.",
+  url: "https://accessories.mipador.com",
 
   logo: {
     nav: {
@@ -21,22 +29,9 @@ export const SITE = {
     },
   },
 
-  hero: {
-    desktop: { src: "/images/hero01.webp", width: 1600, height: 1200 },
-    mobile: {
-      srcSet: "/images/HeroMobile-sm.webp 520w, /images/HeroMobile.webp 677w",
-      width: 677,
-      height: 1350,
-    },
-    featureThumb: {
-      url: "/images/atmosphere-1-thumb.webp",
-      alt: "Mipador — handcrafted Moroccan textiles and decor",
-    },
-  },
-
   social: {
-    instagram: "https://instagram.com/mipador",
-    tiktok: "https://tiktok.com/@mipadorofficial",
-    pinterest: "https://pinterest.com/mipador",
+    instagram: "https://instagram.com/mipadoraccessories",
+    tiktok: "https://tiktok.com/@mipadoraccessories",
+    youtube: "https://youtube.com/@mipadoraccessories",
   },
 } as const;

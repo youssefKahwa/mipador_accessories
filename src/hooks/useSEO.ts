@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { useLocation, useParams } from "react-router-dom";
+import { SITE } from "../config/site";
 
-const SITE_NAME = "Mipador";
-const SITE_URL = "https://mipador.com";
-const OG_DEFAULT_IMAGE = `${SITE_URL}/images/hero.webp`;
+const SITE_NAME = SITE.brandName;
+const SITE_URL = SITE.url;
+const OG_DEFAULT_IMAGE = `${SITE_URL}/images/og-default.jpg`;
 
 const LANGS = ["en", "fr", "ar", "ma"] as const;
 type Lang = (typeof LANGS)[number];
@@ -20,10 +21,10 @@ const LOCALE_MAP: Record<Lang, string> = {
 const RTL_LANGS = new Set<Lang>(["ar", "ma"]);
 
 const DEFAULT_DESCS: Record<Lang, string> = {
-  en: "Mipador — contemporary furniture and home decor for spaces that make you feel free and alive. Premium indoor and outdoor pieces. Based in Casablanca, delivered to Casablanca, Rabat, Marrakech, and across Morocco.",
-  fr: "Mipador — mobilier et décoration contemporains pour des espaces qui vous font sentir libre et vivant. Pièces premium intérieur et extérieur. Basé à Casablanca, livraison à Casablanca, Rabat, Marrakech et partout au Maroc.",
-  ar: "ميبادور — أثاث وديكور معاصر لفضاءات تجعلك تشعر بالحرية والحياة. قطع فاخرة داخلية وخارجية. مقرّنا الدار البيضاء، نوصّل إلى الدار البيضاء والرباط ومراكش وجميع أنحاء المغرب.",
-  ma: "ميبادور — أثاث وديكور معاصر لبلاصات كتخليك تحس بالحرية والحياة. قطع فاخرة من الداخل والخارج. مقرنا الدار البيضاء، التوصيل فجميع أنحاء المغرب.",
+  en: "Mipador Accessories — watches, sunglasses, jewelry and more, built on precision, not hype. 5-year warranty, cash on delivery. Based in Casablanca, delivered across Morocco.",
+  fr: "Mipador Accessories — montres, lunettes de soleil, bijoux et plus, pensés pour durer. Garantie 5 ans, paiement à la livraison. Basé à Casablanca, livraison partout au Maroc.",
+  ar: "ميبادور أكسسوريز — ساعات ونظارات شمسية ومجوهرات وأكثر، مبنية على الدقة لا الضجيج. ضمان 5 سنوات، الدفع عند الاستلام. مقرّنا الدار البيضاء، التوصيل لجميع أنحاء المغرب.",
+  ma: "ميبادور أكسسوريز — ساعات ونظارات شمسية ومجوهرات وأكثر، مبنية على الدقة ماشي على الضجة. ضمان 5 سنين، الخلاص عند التوصيل. مقرنا الدار البيضاء، التوصيل فجميع أنحاء المغرب.",
 };
 
 // ── DOM helpers ───────────────────────────────────────────────────────────────
@@ -125,7 +126,7 @@ export function useSEO(title: string, description?: string, options?: SeoOptions
 
     // ── Twitter Card ─────────────────────────────────────────────────────────
     setMeta("name", "twitter:card", "summary_large_image");
-    setMeta("name", "twitter:site", "@mipador");
+    setMeta("name", "twitter:site", "@mipadoraccessories");
     setMeta("name", "twitter:title", resolvedTitle);
     setMeta("name", "twitter:description", resolvedDesc);
     setMeta("name", "twitter:image", ogImg);

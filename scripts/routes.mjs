@@ -16,7 +16,7 @@ export const staticPages = [
   { path: "about", changefreq: "monthly", priority: "0.75" },
   { path: "contact", changefreq: "yearly", priority: "0.7" },
   { path: "faqs", changefreq: "monthly", priority: "0.65" },
-  { path: "tools/color-palette", changefreq: "monthly", priority: "0.75" },
+  { path: "tools/find-your-match", changefreq: "monthly", priority: "0.75" },
   { path: "privacy-policy", changefreq: "yearly", priority: "0.3" },
   { path: "refund-policy", changefreq: "yearly", priority: "0.3" },
   { path: "terms-of-service", changefreq: "yearly", priority: "0.3" },

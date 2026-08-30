@@ -44,7 +44,7 @@ export function DimensionDiagram({ width, height, depth, className }: DimensionD
     <div className={className}>
       <svg
         viewBox={`0 0 ${viewW} ${viewH}`}
-        className="w-full max-w-[200px] mx-auto text-espresso"
+        className="w-full max-w-[200px] mx-auto text-ink"
         role="img"
         aria-label={`${width} by ${height} centimeters${depth != null ? `, ${depth} cm deep` : ""}`}
       >
@@ -112,7 +112,7 @@ export function DimensionDiagram({ width, height, depth, className }: DimensionD
       </svg>
 
       {depth != null && (
-        <p className="text-center text-[10px] text-espresso/65 font-light mt-2 uppercase tracking-widest">
+        <p className="text-center text-[10px] text-ink/65 font-light mt-2 uppercase tracking-widest">
           + {depth} cm depth
         </p>
       )}

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useProductStore } from "../../../../store/product.store";
 import ProductCard from "../ProductGrid/ProductCard";
 import { useSEO } from "../../../../hooks/useSEO";
-import { AlbatrossMark } from "../../../../components/AlbatrossMark";
+import { MeridianMark } from "../../../../components/MeridianMark";
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -27,7 +27,7 @@ export default function WishlistPage() {
   const wishlistProducts = getWishlistProducts();
 
   return (
-    <div className="bg-cream min-h-screen px-6 py-24 md:py-36">
+    <div className="bg-frost min-h-screen px-6 py-24 md:py-36">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
@@ -37,14 +37,14 @@ export default function WishlistPage() {
           transition={{ duration: 0.7, ease: EASE }}
           className="mb-16"
         >
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-espresso/65 mb-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-ink/65 mb-4">
             {t("products.studio")}
           </p>
-          <h1 className="text-5xl md:text-7xl font-black text-espresso tracking-tight leading-none mb-4">
+          <h1 className="text-5xl md:text-7xl font-black text-ink tracking-tight leading-none mb-4">
             {t("wishlist.heading")}
           </h1>
           {wishlistProducts.length > 0 && (
-            <p className="text-espresso/65 text-sm font-light">
+            <p className="text-ink/65 text-sm font-light">
               {t("wishlist.count", { count: wishlistProducts.length })}
             </p>
           )}
@@ -62,23 +62,23 @@ export default function WishlistPage() {
               className="absolute inset-0 flex items-center justify-center pointer-events-none"
               aria-hidden="true"
             >
-              <div className="w-full max-w-xs text-espresso opacity-[0.04]">
-                <AlbatrossMark />
+              <div className="w-full max-w-xs text-ink opacity-[0.04]">
+                <MeridianMark />
               </div>
             </div>
             <div className="relative z-10 flex flex-col items-center">
-              <div className="w-16 h-16 rounded-2xl bg-espresso/5 flex items-center justify-center mb-6">
-                <Heart size={28} className="text-espresso/65" />
+              <div className="w-16 h-16 rounded-2xl bg-ink/5 flex items-center justify-center mb-6">
+                <Heart size={28} className="text-ink/65" />
               </div>
-              <p className="text-espresso font-black text-sm uppercase tracking-widest mb-2">
+              <p className="text-ink font-black text-sm uppercase tracking-widest mb-2">
                 {t("wishlist.empty")}
               </p>
-              <p className="text-espresso/65 text-xs font-light mb-8 max-w-xs leading-relaxed">
+              <p className="text-ink/65 text-xs font-light mb-8 max-w-xs leading-relaxed">
                 {t("wishlist.emptyHint")}
               </p>
               <Link
                 to={`/${currentLang}/products`}
-                className="text-[10px] font-black uppercase tracking-widest text-espresso border-b border-espresso/30 pb-0.5 hover:border-espresso transition-colors"
+                className="text-[10px] font-black uppercase tracking-widest text-ink border-b border-ink/30 pb-0.5 hover:border-ink transition-colors"
               >
                 {t("wishlist.exploreCollection")}
               </Link>

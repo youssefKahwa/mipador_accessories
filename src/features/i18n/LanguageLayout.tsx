@@ -21,10 +21,10 @@ const PrivacyPolicy   = lazy(() => import("../legal/PrivacyPolicy"));
 const RefundPolicy    = lazy(() => import("../legal/RefundPolicy"));
 const TermsOfService  = lazy(() => import("../legal/TermsOfService"));
 const FaqsPage        = lazy(() => import("../../pages/FaqsPage"));
-const ColorPalettePicker = lazy(() => import("../tools/ColorPalettePicker"));
+const FindYourMatch   = lazy(() => import("../tools/FindYourMatch"));
 
 // Blank fallback — page fade transition covers the transition seam
-const PageLoader = () => <div className="min-h-screen bg-cream" />;
+const PageLoader = () => <div className="min-h-screen bg-frost" />;
 
 const supported = ["en", "fr", "ar", "ma"];
 
@@ -96,7 +96,7 @@ export default function LanguageLayout() {
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/faqs" element={<FaqsPage />} />
 
-              <Route path="/tools/color-palette" element={<ColorPalettePicker />} />
+              <Route path="/tools/find-your-match" element={<FindYourMatch />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -76,7 +76,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
     <div className="relative z-40" ref={wrapperRef}>
       <button
         onClick={() => setOpen(!open)}
-        className={`group flex items-center rounded-xl border border-espresso/10 bg-white/70 backdrop-blur-xl hover:bg-white transition-all duration-300 ${
+        className={`group flex items-center rounded-md border border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/25 transition-all duration-300 ${
           compact ? "p-2" : "gap-2 px-2.5 py-2"
         }`}
         aria-label={current.label}
@@ -84,18 +84,18 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
         <img
           src={current.flag}
           alt={current.label}
-          className="w-5 h-5 rounded-xl object-cover"
+          className="w-4 h-4 rounded-sm object-cover"
         />
 
         {!compact && (
           <>
-            <span className="text-[11px] font-semibold tracking-wide text-espresso">
+            <span className="font-mono text-[10px] font-semibold tracking-wider text-white/80">
               {current.short}
             </span>
             <motion.span
               animate={{ rotate: open ? 180 : 0 }}
               transition={{ duration: 0.2 }}
-              className="text-[10px] text-espresso/65"
+              className="text-[9px] text-white/50"
             >
               ▼
             </motion.span>
@@ -110,7 +110,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.96 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="absolute right-0 top-[120%] w-44 overflow-hidden rounded-xl border border-espresso/10 bg-white/95 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)]"
+            className="absolute right-0 top-[120%] w-44 overflow-hidden rounded-md border border-ink/10 bg-surface shadow-[0_10px_40px_rgba(0,0,0,0.15)]"
           >
             {languages.map((l) => (
               <button
@@ -118,14 +118,14 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
                 onClick={() => switchLang(l.code)}
                 className={`w-full flex items-center gap-3 px-4 py-3 transition-all duration-200 ${
                   currentLang === l.code
-                    ? "bg-espresso text-white"
-                    : "hover:bg-cream text-espresso"
+                    ? "bg-chrome text-white"
+                    : "hover:bg-frost text-ink"
                 }`}
               >
                 <img
                   src={l.flag}
                   alt={l.label}
-                  className="w-5 h-5 rounded-xl object-cover"
+                  className="w-5 h-5 rounded-sm object-cover"
                 />
 
                 <div className="flex flex-col items-start">
@@ -133,7 +133,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
                     {l.label}
                   </span>
 
-                  <span className="text-[10px] opacity-60">
+                  <span className="font-mono text-[10px] opacity-60">
                     {l.short}
                   </span>
                 </div>

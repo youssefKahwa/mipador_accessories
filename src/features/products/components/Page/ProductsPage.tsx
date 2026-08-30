@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { useParams } from "react-router-dom";
+import React, { useMemo, useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useProductStore } from "../../../../store/product.store";
 import { Search, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -11,10 +11,12 @@ import { motion } from "framer-motion";
 import ScrollToTop from "../../../../components/ScrollToTop";
 import { useSEO, useJsonLd } from "../../../../hooks/useSEO";
 import { products } from "../../../../data/products";
+import { SITE } from "../../../../config/site";
+import { CATEGORIES } from "../../../../config/categories";
 
 export const ITEMS_PER_PAGE = 9;
 
-const SITE_URL = "https://mipador.com";
+const SITE_URL = SITE.url;
 
 const COLLECTION_LABELS: Record<string, { home: string; collection: string }> = {
   en: { home: "Home", collection: "Collection" },
@@ -28,18 +30,39 @@ const ProductsPage: React.FC = () => {
     currentPage,
     hasActiveFilters,
     resetFilters,
-    setLocationFilter,
+    setGenderFilter,
     setSelectedCategory,
     selectedCategory,
-    locationFilter,
     getAllCategories,
+    setSelectedAccessoryType,
+    selectedAccessoryType,
+    getAllAccessoryTypes,
   } = useProductStore();
   const { t } = useTranslation();
   const { lang } = useParams<{ lang: string }>();
   const l = lang || "fr";
   const labels = COLLECTION_LABELS[l] ?? COLLECTION_LABELS.en;
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useSEO(t("seo.productsTitle"), t("seo.productsDesc"));
+
+  // Deep links from the Navbar ("?accessoryType=jewelry"), Footer
+  // ("?gender=men"), and Find Your Match ("?category=Diver") apply their
+  // filter once, then clean the URL.
+  useEffect(() => {
+    const gender = searchParams.get("gender");
+    const category = searchParams.get("category");
+    const accessoryType = searchParams.get("accessoryType");
+    if (gender === "men" || gender === "women" || gender === "unisex") {
+      setGenderFilter(gender);
+    }
+    if (accessoryType && CATEGORIES.some((c) => c.id === accessoryType)) {
+      setSelectedAccessoryType(accessoryType as (typeof CATEGORIES)[number]["id"]);
+    }
+    if (category) setSelectedCategory(category);
+    if (gender || category || accessoryType) setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const schema = useMemo(
     () => ({
@@ -49,7 +72,7 @@ const ProductsPage: React.FC = () => {
           "@type": "CollectionPage",
           "@id": `${SITE_URL}/${l}/products#webpage`,
           "url": `${SITE_URL}/${l}/products`,
-          "name": `${t("seo.productsTitle")} | Mipador`,
+          "name": `${t("seo.productsTitle")} | ${SITE.brandName}`,
           "description": t("seo.productsDesc"),
           "isPartOf": { "@id": `${SITE_URL}/#website` },
           "inLanguage": l,
@@ -73,7 +96,7 @@ const ProductsPage: React.FC = () => {
         },
         {
           "@type": "ItemList",
-          "name": "Mipador Furniture & Decor Collection",
+          "name": `${SITE.brandName} Collection`,
           "url": `${SITE_URL}/${l}/products`,
           "numberOfItems": products.length,
           "itemListElement": products.map((p, i) => ({
@@ -94,17 +117,17 @@ const ProductsPage: React.FC = () => {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentItems = filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  // A category/space with zero live products (e.g. Seating, Outdoor — paused
-  // while launch focuses on Wall Art) is a different situation from "no
+  // A category with zero live products is a different situation from "no
   // search results": there's nothing to clear, it just isn't launched yet.
   const liveCategories = getAllCategories();
+  const liveAccessoryTypes = getAllAccessoryTypes();
   const isComingSoonSelection =
     filteredData.length === 0 &&
     ((selectedCategory !== "All" && !liveCategories.includes(selectedCategory)) ||
-      (locationFilter === "outdoor" && selectedCategory === "All"));
+      (selectedAccessoryType !== "All" && !liveAccessoryTypes.includes(selectedAccessoryType)));
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-frost">
       <ScrollToTop />
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 pt-28 md:pt-32 pb-24">
@@ -116,18 +139,18 @@ const ProductsPage: React.FC = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="mb-10 md:mb-12"
         >
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-espresso/65 mb-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-ink/65 mb-2">
             {t("products.studio")}
           </p>
-          <h1 className="text-4xl md:text-7xl font-black text-espresso tracking-tight leading-none">
+          <h1 className="text-4xl md:text-7xl font-black text-ink tracking-tight leading-none">
             {t("products.heading")}
           </h1>
-          <p className="mt-2 text-espresso/65 text-sm font-light">
+          <p className="mt-2 text-ink/65 text-sm font-light">
             {t("products.pieces", { count: filteredData.length })}
             {hasActiveFilters() && (
               <button
                 onClick={resetFilters}
-                className="ml-3 text-gold font-black text-xs uppercase tracking-widest hover:text-espresso transition-colors"
+                className="ml-3 text-champagne font-black text-xs uppercase tracking-widest hover:text-ink transition-colors"
               >
                 {t("products.clearFilters")}
               </button>
@@ -150,55 +173,55 @@ const ProductsPage: React.FC = () => {
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-center justify-center py-24 text-center gap-5"
           >
-            <div className="w-16 h-16 rounded-xl bg-gold/10 flex items-center justify-center">
-              <Sparkles size={22} className="text-gold" />
+            <div className="w-16 h-16 rounded-xl bg-champagne/10 flex items-center justify-center">
+              <Sparkles size={22} className="text-champagne" />
             </div>
             <div className="space-y-1.5">
-              <p className="text-espresso font-black text-sm uppercase tracking-widest">
+              <p className="text-ink font-black text-sm uppercase tracking-widest">
                 {t("products.comingSoonCategory")}
               </p>
-              <p className="text-espresso/65 text-xs font-light max-w-xs mx-auto leading-relaxed">
+              <p className="text-ink/65 text-xs font-light max-w-xs mx-auto leading-relaxed">
                 {t("products.comingSoonCategoryHint")}
               </p>
             </div>
             <button
-              onClick={() => { resetFilters(); setSelectedCategory("Wall Art"); }}
-              className="px-5 py-2.5 bg-espresso text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-espresso-light transition-colors"
+              onClick={() => { resetFilters(); }}
+              className="px-5 py-2.5 bg-chrome text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-chrome-light transition-colors"
             >
               {t("products.comingSoonCategoryCta")}
             </button>
           </motion.div>
         ) : filteredData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center gap-5">
-            <div className="w-16 h-16 rounded-xl bg-espresso/5 flex items-center justify-center">
-              <Search size={22} className="text-espresso/65" />
+            <div className="w-16 h-16 rounded-xl bg-ink/5 flex items-center justify-center">
+              <Search size={22} className="text-ink/65" />
             </div>
             <div className="space-y-1.5">
-              <p className="text-espresso/65 font-black text-sm uppercase tracking-widest">
+              <p className="text-ink/65 font-black text-sm uppercase tracking-widest">
                 {t("products.noResults")}
               </p>
-              <p className="text-espresso/65 text-xs font-light max-w-xs mx-auto leading-relaxed">
+              <p className="text-ink/65 text-xs font-light max-w-xs mx-auto leading-relaxed">
                 {t("products.noResultsHint")}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 justify-center">
               <button
                 onClick={resetFilters}
-                className="px-4 py-2 bg-espresso text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-espresso-light transition-colors"
+                className="px-4 py-2 bg-chrome text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-chrome-light transition-colors"
               >
                 {t("products.noResultsAll")}
               </button>
               <button
-                onClick={() => { resetFilters(); setLocationFilter("indoor"); }}
-                className="px-4 py-2 bg-white border border-espresso/15 text-espresso/65 text-[10px] font-black uppercase tracking-widest rounded-xl hover:border-espresso/30 hover:text-espresso transition-colors"
+                onClick={() => { resetFilters(); setGenderFilter("men"); }}
+                className="px-4 py-2 bg-surface border border-ink/15 text-ink/65 text-[10px] font-black uppercase tracking-widest rounded-xl hover:border-ink/30 hover:text-ink transition-colors"
               >
-                {t("products.noResultsIndoor")}
+                {t("products.noResultsMen")}
               </button>
               <button
-                onClick={() => { resetFilters(); setLocationFilter("outdoor"); }}
-                className="px-4 py-2 bg-white border border-espresso/15 text-espresso/65 text-[10px] font-black uppercase tracking-widest rounded-xl hover:border-espresso/30 hover:text-espresso transition-colors"
+                onClick={() => { resetFilters(); setGenderFilter("women"); }}
+                className="px-4 py-2 bg-surface border border-ink/15 text-ink/65 text-[10px] font-black uppercase tracking-widest rounded-xl hover:border-ink/30 hover:text-ink transition-colors"
               >
-                {t("products.noResultsOutdoor")}
+                {t("products.noResultsWomen")}
               </button>
             </div>
           </div>

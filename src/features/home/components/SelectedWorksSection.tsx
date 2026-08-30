@@ -1,6 +1,6 @@
 import React from "react";
 import { useProductStore } from "../../../store/product.store";
-import ProductCardHomePage from "../../products/components/ProductGrid/ProductCardHomePage";
+import ProductCard from "../../products/components/ProductGrid/ProductCard";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -21,7 +21,7 @@ const SelectedWorksSection: React.FC = () => {
   const currentLang = lang || "fr";
 
   return (
-    <section className="bg-fog py-20 px-6">
+    <section className="bg-haze py-20 px-6">
       <div className="max-w-7xl mx-auto">
 
         <motion.div
@@ -32,15 +32,15 @@ const SelectedWorksSection: React.FC = () => {
           className="flex flex-col md:flex-row justify-between items-end mb-16 gap-4"
         >
           <div>
-            <h2 className="text-4xl md:text-5xl font-black text-espresso tracking-tighter">
+            <h2 className="text-4xl md:text-5xl font-black text-ink tracking-tighter">
               {t("home.selectedWorks").split(" ").map((word, i, arr) =>
                 i === arr.length - 1 ? (
-                  <span key={i} className="text-espresso/65 italic">{word}</span>
+                  <span key={i} className="text-ink/65 italic">{word}</span>
                 ) : (
                   <span key={i}>{word} </span>
                 )
               )}
-              <span className="block mt-2 text-espresso/70 font-bold uppercase tracking-[0.3em] text-[10px] not-italic">
+              <span className="block mt-2 text-ink/70 font-bold uppercase tracking-[0.3em] text-[10px] not-italic">
                 {t("home.selectedWorksSub")}
               </span>
             </h2>
@@ -48,15 +48,15 @@ const SelectedWorksSection: React.FC = () => {
 
           <Link
             to={`/${currentLang}/products`}
-            className="text-xs font-black uppercase tracking-widest border-b-2 border-espresso pb-1 text-espresso hover:text-espresso-light hover:border-espresso-light transition-colors"
+            className="text-xs font-black uppercase tracking-widest border-b-2 border-ink pb-1 text-ink hover:text-ink-light hover:border-ink-light transition-colors"
           >
             {t("home.exploreCollection")}
           </Link>
         </motion.div>
 
         {featured.length === 0 ? (
-          <div className="text-center py-20 bg-white/50 rounded-3xl border border-dashed border-espresso/10">
-            <p className="text-espresso/65 font-medium">{t("home.noFeatured")}</p>
+          <div className="text-center py-20 bg-white/50 rounded-3xl border border-dashed border-ink/10">
+            <p className="text-ink/65 font-medium">{t("home.noFeatured")}</p>
           </div>
         ) : (
           <motion.div
@@ -68,7 +68,7 @@ const SelectedWorksSection: React.FC = () => {
           >
             {featured.map((item) => (
               <motion.div key={item.id} variants={cardVariants}>
-                <ProductCardHomePage product={item} />
+                <ProductCard product={item} />
               </motion.div>
             ))}
           </motion.div>

@@ -46,7 +46,7 @@ export default function FloatingWhatsApp() {
 
       {/* Tooltip */}
       <span
-        className={`absolute bottom-full mb-2.5 ${isRTL ? "left-0" : "right-0"} bg-espresso text-white text-[9px] font-black uppercase tracking-widest px-3 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none`}
+        className={`absolute bottom-full mb-2.5 ${isRTL ? "left-0" : "right-0"} bg-chrome text-white text-[9px] font-black uppercase tracking-widest px-3 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none`}
         aria-hidden="true"
       >
         {t("whatsapp.chatWithUs")}

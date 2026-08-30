@@ -1,2 +1,2 @@
-<h1 align="center"> mipador </h1>
-<p align="center"> ​​Made to move free, A single honest object beats a room full of noise </p>
+<h1 align="center"> Mipador Accessories </h1>
+<p align="center"> Watches, sunglasses, jewelry and more — accessories, considered, delivered across Morocco </p>

@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { zelligePatternStyle } from "../../../config/patterns";
+import { guillochePatternStyle } from "../../../config/patterns";
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -17,11 +17,11 @@ const HowToOrder: React.FC = () => {
   ];
 
   return (
-    <section className="relative py-6 sm:py-8 lg:py-12 bg-fog">
+    <section className="relative py-6 sm:py-8 lg:py-12 bg-haze">
 
       <div
         className="absolute inset-0 opacity-[0.1] pointer-events-none z-0"
-        style={zelligePatternStyle()}
+        style={guillochePatternStyle()}
       />
 
       <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -33,10 +33,10 @@ const HowToOrder: React.FC = () => {
           transition={{ duration: 0.7, ease: EASE }}
           className="max-w-2xl mx-auto text-center"
         >
-          <h2 className="text-3xl font-bold leading-tight text-espresso sm:text-4xl lg:text-5xl">
+          <h2 className="text-3xl font-bold leading-tight text-ink sm:text-4xl lg:text-5xl">
             {t("howToOrder.heading")}
           </h2>
-          <p className="max-w-lg mx-auto mt-4 text-base leading-relaxed text-espresso/70">
+          <p className="max-w-lg mx-auto mt-4 text-base leading-relaxed text-ink/70">
             {t("howToOrder.body")}
           </p>
         </motion.div>
@@ -67,13 +67,13 @@ const HowToOrder: React.FC = () => {
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ delay: i * 0.15, duration: 0.6, ease: EASE }}
               >
-                <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-full border border-espresso/20 bg-white shadow-sm">
-                  <span className="text-lg font-semibold text-espresso">{step.number}</span>
+                <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-full border border-ink/20 bg-surface shadow-sm">
+                  <span className="text-lg font-semibold text-ink">{step.number}</span>
                 </div>
-                <h3 className="mt-6 text-xl font-semibold leading-tight text-espresso md:mt-10">
+                <h3 className="mt-6 text-xl font-semibold leading-tight text-ink md:mt-10">
                   {t(step.titleKey)}
                 </h3>
-                <p className="mt-4 text-base text-espresso/70 leading-relaxed">
+                <p className="mt-4 text-base text-ink/70 leading-relaxed">
                   {t(step.descKey)}
                 </p>
               </motion.div>

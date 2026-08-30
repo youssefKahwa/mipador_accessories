@@ -1,7 +1,7 @@
 import { Compass, Hammer, Wind, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { zelligePatternStyle } from "../../../config/patterns";
+import { guillochePatternStyle } from "../../../config/patterns";
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -16,11 +16,11 @@ const TaglineSection = () => {
   ];
 
   return (
-    <section className="relative py-16 md:py-32 bg-fog flex items-center justify-center overflow-hidden">
+    <section className="relative py-16 md:py-32 bg-haze flex items-center justify-center overflow-hidden">
 
       <div
         className="absolute inset-0 opacity-[0.07] pointer-events-none z-0"
-        style={zelligePatternStyle()}
+        style={guillochePatternStyle()}
       />
 
       <div className="max-w-7xl mx-auto px-6">
@@ -29,10 +29,10 @@ const TaglineSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 1, ease: EASE }}
-          className="text-3xl md:text-5xl font-medium text-espresso leading-tight text-center max-w-4xl mx-auto"
+          className="text-3xl md:text-5xl font-medium text-ink leading-tight text-center max-w-4xl mx-auto"
         >
           {t("tagline.headline")}{" "}
-          <span className="text-espresso/65 italic">
+          <span className="text-ink/65 italic">
             {t("tagline.headlineSoft")}
           </span>{" "}
           {t("tagline.headlineEnd")}
@@ -46,15 +46,15 @@ const TaglineSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ delay: i * 0.12, duration: 0.6, ease: EASE }}
-              className="flex flex-col items-center text-center p-6 md:p-8 rounded-3xl bg-[#FFFFFF]/70 border border-espresso/10 transition-all duration-500 hover:scale-[1.02] hover:border-espresso/20 hover:shadow-sm"
+              className="flex flex-col items-center text-center p-6 md:p-8 rounded-3xl bg-[#FFFFFF]/70 border border-ink/10 transition-all duration-500 hover:scale-[1.02] hover:border-ink/20 hover:shadow-sm"
             >
-              <div className="mb-6 text-espresso/65">
+              <div className="mb-6 text-ink/65">
                 {item.icon}
               </div>
-              <h3 className="text-base font-semibold mb-3 text-espresso tracking-wide">
+              <h3 className="text-base font-semibold mb-3 text-ink tracking-wide">
                 {t(item.titleKey)}
               </h3>
-              <p className="text-espresso/65 text-sm leading-relaxed font-light">
+              <p className="text-ink/65 text-sm leading-relaxed font-light">
                 {t(item.descKey)}
               </p>
             </motion.div>

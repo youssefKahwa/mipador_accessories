@@ -1,6 +1,6 @@
 {
-  "name": "my-maganti",
-  "homepage": "www.mymaganti.com",
+  "name": "mipador-accessories",
+  "homepage": "accessories.mipador.com",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -29,6 +29,7 @@
     "react-dom": "^19.2.5",
     "react-i18next": "^17.0.8",
     "react-leaflet": "^5.0.0",
+    "react-parallax-tilt": "^1.7.337",
     "react-router-dom": "^7.15.1",
     "swiper": "^12.2.0",
     "tailwindcss": "^4.2.1",

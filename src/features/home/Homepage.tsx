@@ -11,8 +11,9 @@ import ManifestoSection from "./components/ManifestoSection";
 import ScrollToTop from "../../components/ScrollToTop";
 import { useSEO, useJsonLd } from "../../hooks/useSEO";
 import { products } from "../../data/products";
+import { SITE } from "../../config/site";
 
-const SITE_URL = "https://mipador.com";
+const SITE_URL = SITE.url;
 
 const BREADCRUMB_HOME: Record<string, string> = {
   en: "Home",
@@ -35,7 +36,7 @@ const HomePage: React.FC = () => {
           "@type": "WebPage",
           "@id": `${SITE_URL}/${l}/#webpage`,
           "url": `${SITE_URL}/${l}/`,
-          "name": `${t("seo.homeTitle")} | Mipador`,
+          "name": `${t("seo.homeTitle")} | ${SITE.brandName}`,
           "description": t("seo.homeDesc"),
           "isPartOf": { "@id": `${SITE_URL}/#website` },
           "about": { "@id": `${SITE_URL}/#organization` },
@@ -54,9 +55,9 @@ const HomePage: React.FC = () => {
         },
         {
           "@type": "ItemList",
-          "name": "Featured Mipador Products",
+          "name": `Featured ${SITE.brandName}`,
           "description":
-            "Handcrafted wall art and paintings — the debut Mipador collection.",
+            "Precision automatic, quartz, and chronograph timepieces — the debut Mipador Accessories collection.",
           "url": `${SITE_URL}/${l}/products`,
           "numberOfItems": products.length,
           "itemListElement": products.map((p, i) => ({

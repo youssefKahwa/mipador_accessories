@@ -1,5 +1,6 @@
 export type ProductStatus = "available" | "out-of-stock" | "coming-soon";
-export type ProductLocation = "indoor" | "outdoor";
+export type Gender = "men" | "women" | "kids" | "unisex";
+export type Movement = "automatic" | "mechanical" | "quartz";
 
 export interface ProductLocale {
   name?: string;
@@ -11,50 +12,125 @@ export interface ProductLocale {
   leadTime?: string;
 }
 
-export type ProductCategory =
-  | "Wall Art"
-  | "Seating"
-  | "Tables"
-  | "Lighting"
-  | "Storage"
-  | "Decor"
-  | "Shelving"
-  | "Beds"
-  | "Outdoor Seating"
-  | "Outdoor Tables"
-  | "Outdoor Lighting"
-  | "Outdoor Decor";
+// The top-level accessory line — drives routing, nav, and the sitemap.
+// See src/config/categories.ts for the full taxonomy (subcategories per
+// line, applicable genders, hero imagery).
+export type AccessoryType =
+  | "watches"
+  | "sunglasses"
+  | "eyeglasses"
+  | "jewelry"
+  | "bags"
+  | "scarves"
+  | "belts"
+  | "hats";
 
-export interface ProductDimensions {
-  width: number;   // cm
-  depth: number;   // cm
-  height: number;  // cm
-  weight: number;  // kg
-}
+// Watches are the only line with a closed subcategory set today — kept as
+// a real union because the style quiz (styleData.ts) needs compile-time
+// safety against typos. Every other line's subcategory is just a string
+// on Product (see below); validate those against categories.ts instead.
+export type WatchSubcategory =
+  | "GMT"
+  | "Dress"
+  | "Diver"
+  | "Chronograph"
+  | "Skeleton"
+  | "Field";
+
+// Specs are polymorphic per accessory line — narrow on `kind` before
+// reading a line-specific field, e.g. `product.specs.kind === "watches"`.
+// `warranty` is duplicated onto every branch since nearly every UI surface
+// that reads specs wants it unconditionally, without narrowing first.
+export type ProductSpecs =
+  | {
+      kind: "watches";
+      movement: Movement;
+      caseDiameter: number;    // mm
+      caseThickness: number;   // mm
+      lugToLug: number;        // mm
+      weight: number;          // g
+      waterResistance: string; // e.g. "100m / 10 ATM"
+      powerReserve?: string;   // automatics/mechanicals only, e.g. "42 hours"
+      warranty: string;
+    }
+  | {
+      kind: "sunglasses" | "eyeglasses";
+      frameWidth: number;    // mm
+      lensWidth: number;     // mm
+      bridgeWidth: number;   // mm
+      templeLength: number;  // mm
+      frameMaterial: string;
+      lensType?: string;     // e.g. "Polarized", "Prescription-ready"
+      uvProtection?: string; // e.g. "UV400"
+      warranty: string;
+    }
+  | {
+      kind: "jewelry";
+      metal: string; // e.g. "18k Gold Vermeil", "Sterling Silver"
+      stone?: string;
+      chainLength?: number; // cm
+      adjustable: boolean;
+      hypoallergenic?: boolean;
+      warranty: string;
+    }
+  | {
+      kind: "bags";
+      dimensions: { width: number; height: number; depth: number }; // cm
+      strapDrop?: number; // cm
+      material: string;
+      closureType?: string;
+      interiorPockets?: number;
+      warranty: string;
+    }
+  | {
+      kind: "scarves";
+      dimensions: { length: number; width: number }; // cm
+      fabric: string;
+      careInstructions?: string;
+      warranty: string;
+    }
+  | {
+      kind: "belts";
+      lengths: number[]; // available lengths, cm
+      width: number;     // mm
+      material: string;
+      buckleType?: string;
+      warranty: string;
+    }
+  | {
+      kind: "hats";
+      sizeRange: string[]; // e.g. ["S/M", "L/XL"] or cm circumference
+      material: string;
+      adjustable: boolean;
+      warranty: string;
+    };
 
 export interface Product {
   id: string;
   name: string;
-  slug: string;                    // for URL: /products/wabi-lounge-chair
+  slug: string;                    // for URL: /products/meridian-gmt
   tagline: string;                 // short emotional sentence
-  description: string;            // longer brand-voice paragraph
+  description: string;             // longer brand-voice paragraph
   price: number;                   // in MAD
   status: ProductStatus;
-  location: ProductLocation;       // indoor | outdoor
-  category: ProductCategory;
-  collection: string;              // e.g. "Wabi Series", "Sahara Edit"
-  materials: string[];             // e.g. ["Solid walnut", "Moroccan leather"]
-  dimensions: ProductDimensions;
-  colors: string[];                // available colorways / dominant palette (art)
-  colorSwatches?: string[];        // optional hex codes, same order as `colors` — renders swatch dots
+  gender: Gender;
+  accessoryType: AccessoryType;    // top-level line: watches, sunglasses, ...
+  subcategory: string;             // fine-grained type within the line, e.g. "GMT", "Aviator", "Tote"
+  collection: string;              // e.g. "Meridian Collection"
+  materials: string[];             // case / crystal / strap descriptors
+  specs: ProductSpecs;
+  colors: string[];                // dial / strap colorway names
+  colorSwatches?: string[];        // hex codes, same order as `colors`
+  sizes?: string[];                // size options where relevant (belts, hats, scarves, jewelry chains)
   care: string[];                  // care instructions
-  leadTime: string;                // e.g. "3–4 weeks" (handcrafted)
+  leadTime: string;                // e.g. "Ships within 24h" / "Sold out — join the waitlist"
   inStock: boolean;
   featured: boolean;
-  images: string[];                // multiple images: [main, detail, lifestyle]
-  tags: string[];                  // for filtering: ["bestseller", "new", "handcrafted"]
+  images: string[];                // real photography slots — swap in anytime, see WatchIllustration fallback
+  tags: string[];                  // for filtering: ["bestseller", "new", "limited-edition", "in-house-movement"]
   stock: number;
-  model?: string;                  // URL to .glb file for 3D viewer (optional)
+  model?: string;                  // URL to .glb file for the 3D/AR viewer (optional)
+  engravingAvailable?: boolean;    // offer free engraving in the order form
   translations?: {
     fr?: ProductLocale;
     ar?: ProductLocale;
@@ -62,743 +138,1118 @@ export interface Product {
   };
 }
 
-// ─── ACTIVE CATALOG — Wall Art launch collection ───────────────────────────
-// Brand focus has shifted to wall art / paintings for launch. The previous
-// furniture catalog is preserved below (commented out), not deleted — see
-// the "PAUSED — furniture catalog" block at the bottom of this file.
 export const products: Product[] = [
   {
-    id: "6",
-    name: "Zellige Fragments",
-    slug: "zellige-fragments",
-    tagline: "Zellige, shattered and rebuilt.",
-    description:
-      "A study in shattered symmetry — this piece translates the nested geometry of Moroccan zellige into a modern composition of terracotta, gold, and espresso fragments on raw cotton paper. Archivally printed and framed by hand in our Casablanca studio, it holds centuries of pattern in a single, contemporary breath.",
-    price: 4200,
-    status: "available",
-    location: "indoor",
-    category: "Wall Art",
-    collection: "Atelier Edit",
-    materials: ["Giclée print on archival cotton paper", "Solid oak frame, natural finish", "Museum-grade UV glass"],
-    dimensions: { width: 80, depth: 4, height: 100, weight: 5.5 },
-    colors: ["Terracotta", "Gold Ochre", "Espresso", "Dusty Rose", "Cream"],
-    colorSwatches: ["#B5533C", "#C9922A", "#3D1A12", "#C48A78", "#EADFCF"],
-    care: [
-      "Avoid direct sunlight to preserve pigments",
-      "Dust frame with a dry, soft cloth",
-      "Keep away from humidity",
-      "Do not hang above heat sources",
-    ],
-    leadTime: "1–2 weeks",
-    inStock: true,
-    featured: true,
-    images: ["/images/products/zellige-fragments-main.webp"],
-    tags: ["bestseller", "new", "handcrafted"],
-    stock: 6,
-    translations: {
-      fr: {
-        name: "Fragments de Zellige",
-        tagline: "Le zellige, brisé puis reconstruit.",
-        description: "Une étude de symétrie brisée — cette pièce traduit la géométrie imbriquée du zellige marocain en une composition contemporaine de fragments terracotta, or et expresso sur papier coton. Imprimée en édition d'art et encadrée à la main dans notre atelier de Casablanca, elle contient des siècles de motifs dans un souffle résolument moderne.",
-        materials: ["Impression giclée sur papier coton d'archive", "Cadre en chêne massif, finition naturelle", "Verre anti-UV qualité musée"],
-        colors: ["Terracotta", "Ocre doré", "Expresso", "Rose poudré", "Crème"],
-        care: [
-          "Évitez l'exposition directe au soleil pour préserver les pigments",
-          "Dépoussiérez le cadre avec un chiffon doux et sec",
-          "Tenez à l'écart de l'humidité",
-          "Ne pas suspendre au-dessus d'une source de chaleur",
-        ],
-        leadTime: "1–2 semaines",
-      },
-      ar: {
-        name: "شظايا الزليج",
-        tagline: "الزليج، تكسّر ثم أُعيد بناؤه.",
-        description: "دراسة في التناظر المتكسّر — تترجم هذه القطعة الهندسة المتشابكة للزليج المغربي إلى تكوين معاصر من شظايا التراكوتا والذهبي والإسبريسو على ورق قطني. مطبوعة بتقنية الجيكليه ومؤطرة يدوياً في استوديونا بالدار البيضاء، تحمل قروناً من الزخرفة في نفَس عصري واحد.",
-        materials: ["طباعة جيكليه على ورق قطني أرشيفي", "إطار من خشب البلوط الصلب بلمسة طبيعية", "زجاج حامي من الأشعة فوق البنفسجية بجودة المتاحف"],
-        colors: ["التراكوتا", "الذهبي الترابي", "الإسبريسو", "الوردي الترابي", "الكريمي"],
-        care: [
-          "تجنب التعرض المباشر لأشعة الشمس للحفاظ على الألوان",
-          "نظّف الإطار بقماش جاف وناعم",
-          "أبعد عن الرطوبة",
-          "لا تُعلّق فوق مصادر الحرارة",
-        ],
-        leadTime: "1–2 أسابيع",
-      },
-      ma: {
-        name: "شظايا الزليج",
-        tagline: "الزليج، تهرّس ومن بعد تبنى من جديد.",
-        description: "دراسة فالتناظر المكسّر — هاد القطعة كتترجم الهندسة المتشابكة ديال الزليج المغربي لتكوين عصري من شظايا التراكوتا والذهبي والإسبريسو فوق ورق قطني. مطبوعة بجيكليه ومؤطرة باليد فالأتيلي ديالنا بالدار البيضاء، كتحمل قرون من الزخرفة فنفَس عصري واحد.",
-        materials: ["طباعة جيكليه فوق ورق قطني", "إطار من البلوط الصلب بلمسة طبيعية", "زجاج ضد الأشعة بجودة المتاحف"],
-        colors: ["التراكوتا", "الذهبي", "الإسبريسو", "الوردي الترابي", "الكريمي"],
-        care: [
-          "بعّد على الشمس المباشرة باش يبقاو الألوان",
-          "نضح الإطار بشمالة جافة وناعمة",
-          "بعّد على الرطوبة",
-          "ما تعلقوش فوق مصادر السخانة",
-        ],
-        leadTime: "1–2 أسابيع",
-      },
-    },
-  },
-  {
-    id: "7",
-    name: "Dune Horizon",
-    slug: "dune-horizon",
-    tagline: "Where the sand meets the sky.",
-    description:
-      "Painted in wide, unhurried bands, Dune Horizon distills the Sahara's edge into pure color — sand giving way to rust, rust to umber, umber to night. Hung low and wide, it turns a wall into a horizon line.",
-    price: 3800,
-    status: "available",
-    location: "indoor",
-    category: "Wall Art",
-    collection: "Atelier Edit",
-    materials: ["Acrylic on canvas", "Floating frame, blackened oak"],
-    dimensions: { width: 100, depth: 3.5, height: 70, weight: 4.8 },
-    colors: ["Warm Sand", "Terracotta", "Burnt Umber", "Espresso", "Gold"],
-    colorSwatches: ["#EFDCC0", "#C4845A", "#7A4530", "#3D1A12", "#C9922A"],
-    care: [
-      "Keep out of direct, prolonged sunlight",
-      "Dust canvas edges with a dry brush",
-      "Avoid humid rooms (bathrooms, kitchens)",
-    ],
-    leadTime: "2–3 weeks",
-    inStock: true,
-    featured: true,
-    images: ["/images/products/dune-horizon-main.webp"],
-    tags: ["new", "handcrafted"],
-    stock: 5,
-    translations: {
-      fr: {
-        name: "Horizon des Dunes",
-        tagline: "Là où le sable rencontre le ciel.",
-        description: "Peinte en larges bandes tranquilles, Horizon des Dunes distille la lisière du Sahara en couleur pure — le sable cédant à la rouille, la rouille à l'ombre. Suspendue bas et large, elle transforme un mur en ligne d'horizon.",
-        materials: ["Acrylique sur toile", "Cadre flottant en chêne noirci"],
-        colors: ["Sable chaud", "Terracotta", "Ombre brûlée", "Expresso", "Or"],
-        care: [
-          "Évitez une exposition prolongée au soleil direct",
-          "Dépoussiérez les bords de la toile avec une brosse sèche",
-          "Évitez les pièces humides (salle de bain, cuisine)",
-        ],
-        leadTime: "2–3 semaines",
-      },
-      ar: {
-        name: "أفق الكثبان",
-        tagline: "حيث تلتقي الرمال بالسماء.",
-        description: "مرسومة بأشرطة عريضة هادئة، تختزل «أفق الكثبان» حافة الصحراء الكبرى في لون خالص — الرمل يفسح المجال للصدأ، والصدأ للسواد. معلّقة منخفضة وعريضة، تحوّل الجدار إلى خط أفق.",
-        materials: ["أكريليك على قماش الكانفاس", "إطار عائم من خشب البلوط المؤكسد"],
-        colors: ["الرمل الدافئ", "التراكوتا", "السنّي المحروق", "الإسبريسو", "الذهبي"],
-        care: [
-          "تجنب التعرض الطويل لأشعة الشمس المباشرة",
-          "نظّف حواف اللوحة بفرشاة جافة",
-          "تجنب الغرف الرطبة كالحمام والمطبخ",
-        ],
-        leadTime: "2–3 أسابيع",
-      },
-      ma: {
-        name: "أفق الكثبان",
-        tagline: "فين كيلتقاو الرمل والسما.",
-        description: "مرسومة بخطوط عريضة هادئة، «أفق الكثبان» كتختزل حافة الصحرا فلون خالص — الرمل كيفسح للصدأ، والصدأ للظل. معلقة منخفضة وعريضة، كتحول الجدار لخط أفق.",
-        materials: ["أكريليك فوق الكانفاس", "إطار عائم من البلوط المؤكسد"],
-        colors: ["الرمل الدافئ", "التراكوتا", "السنّي", "الإسبريسو", "الذهبي"],
-        care: [
-          "بعّد على الشمس المباشرة لمدة طويلة",
-          "نضح حواف اللوحة بفرشاة جافة",
-          "بعّد على البيوت الرطبة بحال الحمام والكوزينا",
-        ],
-        leadTime: "2–3 أسابيع",
-      },
-    },
-  },
-  {
-    id: "8",
-    name: "Indigo Medina",
-    slug: "indigo-medina",
-    tagline: "The blue hour, held still.",
-    description:
-      "Layered arches in deepening blue recall the blue hour over a medina rooftop, when the calls to prayer fade and the sky holds its last light. Oil on canvas, framed in solid walnut — a quiet anchor for any room.",
-    price: 3600,
-    status: "available",
-    location: "indoor",
-    category: "Wall Art",
-    collection: "Atelier Edit",
-    materials: ["Oil on canvas", "Solid walnut frame"],
-    dimensions: { width: 70, depth: 4, height: 90, weight: 5 },
-    colors: ["Indigo", "Cream", "Gold", "Slate"],
-    colorSwatches: ["#234A66", "#F6F4F1", "#C9922A", "#5A6B78"],
-    care: [
-      "Avoid direct sunlight to preserve oil pigments",
-      "Dust the frame only, never the canvas surface",
-      "Maintain stable room humidity",
-    ],
-    leadTime: "3–4 weeks",
-    inStock: true,
-    featured: true,
-    images: ["/images/products/indigo-medina-main.webp"],
-    tags: ["bestseller", "handcrafted"],
-    stock: 4,
-    translations: {
-      fr: {
-        name: "Médina Indigo",
-        tagline: "L'heure bleue, figée.",
-        description: "Des arches superposées dans un bleu qui s'approfondit rappellent l'heure bleue sur les toits de la médina, quand les appels à la prière s'estompent et que le ciel retient sa dernière lumière. Huile sur toile, encadrée en noyer massif — une ancre tranquille pour toute pièce.",
-        materials: ["Huile sur toile", "Cadre en noyer massif"],
-        colors: ["Indigo", "Crème", "Or", "Ardoise"],
-        care: [
-          "Évitez le soleil direct pour préserver les pigments à l'huile",
-          "Dépoussiérez uniquement le cadre, jamais la toile",
-          "Maintenez une humidité ambiante stable",
-        ],
-        leadTime: "3–4 semaines",
-      },
-      ar: {
-        name: "مدينة النيلي",
-        tagline: "الساعة الزرقاء، ثابتة في مكانها.",
-        description: "أقواس متراكبة بأزرق يزداد عمقاً تستحضر الساعة الزرقاء فوق أسطح المدينة، حين يخفت نداء الأذان وتحتفظ السماء بآخر ضوء لها. زيت على قماش، مؤطرة بخشب الجوز الصلب — ركيزة هادئة لأي غرفة.",
-        materials: ["زيت على قماش الكانفاس", "إطار من خشب الجوز الصلب"],
-        colors: ["النيلي", "الكريمي", "الذهبي", "الرمادي الأردوازي"],
-        care: [
-          "تجنب الشمس المباشرة للحفاظ على ألوان الزيت",
-          "نظّف الإطار فقط، ولا تلمس سطح اللوحة أبداً",
-          "حافظ على رطوبة ثابتة في الغرفة",
-        ],
-        leadTime: "3–4 أسابيع",
-      },
-      ma: {
-        name: "مدينة النيلي",
-        tagline: "الساعة الزرقة، واقفة.",
-        description: "أقواس فوق بعضياتهم بأزرق كيزيد يعمق كيفكّرو بالساعة الزرقة فوق سطوح المدينة، منين كيخفت الأذان والسما كتشد آخر ضوء ديالها. زيت فوق الكانفاس، مؤطرة بخشب الجوز الصلب — ركيزة هادية لأي بيت.",
-        materials: ["زيت فوق الكانفاس", "إطار من الجوز الصلب"],
-        colors: ["النيلي", "الكريمي", "الذهبي", "الرمادي"],
-        care: [
-          "بعّد على الشمس المباشرة باش يبقاو الألوان",
-          "نضح غير الإطار، عمرك ما تمس سطح اللوحة",
-          "حافظ على رطوبة ثابتة فالبيت",
-        ],
-        leadTime: "3–4 أسابيع",
-      },
-    },
-  },
-  {
-    id: "9",
-    name: "Saffron Bloom",
-    slug: "saffron-bloom",
-    tagline: "A garden that never wilts.",
-    description:
-      "Loose, overlapping blooms in saffron and olive — painted the way a garden grows, without a plan. Watercolor on cotton paper, framed under museum glass to keep its warmth exactly as it was laid down.",
-    price: 2600,
-    status: "available",
-    location: "indoor",
-    category: "Wall Art",
-    collection: "Atelier Edit",
-    materials: ["Watercolor on cotton paper", "Museum glass, oak frame"],
-    dimensions: { width: 60, depth: 3, height: 80, weight: 3.2 },
-    colors: ["Saffron", "Olive", "Gold", "Blush", "Espresso"],
-    colorSwatches: ["#E8B090", "#8B9E7A", "#C9922A", "#F0D4C0", "#3D1A12"],
-    care: [
-      "Keep away from direct sunlight and moisture",
-      "Dust glass gently with a dry microfiber cloth",
-      "Handle by the frame only",
-    ],
-    leadTime: "1–2 weeks",
-    inStock: true,
-    featured: false,
-    images: ["/images/products/saffron-bloom-main.webp"],
-    tags: ["new"],
-    stock: 7,
-    translations: {
-      fr: {
-        name: "Floraison Safran",
-        tagline: "Un jardin qui ne fane jamais.",
-        description: "Des fleurs lâches et superposées en safran et olive — peintes comme un jardin pousse, sans plan préétabli. Aquarelle sur papier coton, encadrée sous verre musée pour garder toute sa chaleur intacte.",
-        materials: ["Aquarelle sur papier coton", "Verre musée, cadre en chêne"],
-        colors: ["Safran", "Olive", "Or", "Rose pâle", "Expresso"],
-        care: [
-          "Tenez à l'écart du soleil direct et de l'humidité",
-          "Dépoussiérez le verre délicatement avec un chiffon microfibre sec",
-          "Manipulez uniquement par le cadre",
-        ],
-        leadTime: "1–2 semaines",
-      },
-      ar: {
-        name: "إزهار الزعفران",
-        tagline: "حديقة لا تذبل أبداً.",
-        description: "أزهار متراكبة بحرية بألوان الزعفران والزيتوني — مرسومة كما تنمو الحديقة، دون خطة مسبقة. ألوان مائية على ورق قطني، مؤطرة تحت زجاج بجودة المتاحف للحفاظ على دفئها كما هو.",
-        materials: ["ألوان مائية على ورق قطني", "زجاج بجودة المتاحف، إطار من خشب البلوط"],
-        colors: ["الزعفراني", "الزيتوني", "الذهبي", "الوردي الفاتح", "الإسبريسو"],
-        care: [
-          "أبعد عن الشمس المباشرة والرطوبة",
-          "نظّف الزجاج برفق بقماش مايكروفايبر جاف",
-          "تعامل معها من الإطار فقط",
-        ],
-        leadTime: "1–2 أسابيع",
-      },
-      ma: {
-        name: "إزهار الزعفران",
-        tagline: "حديقة عمرها ما كتذبل.",
-        description: "زهور متراكبة بحرية بألوان الزعفران والزيتوني — مرسومة بحال ما كتنبت الحديقة، بلا تخطيط. ألوان مائية فوق ورق قطني، مؤطرة تحت زجاج بجودة المتاحف باش يبقى الدفء ديالها كيفما هو.",
-        materials: ["ألوان مائية فوق ورق قطني", "زجاج بجودة المتاحف، إطار من البلوط"],
-        colors: ["الزعفراني", "الزيتوني", "الذهبي", "الوردي الفاتح", "الإسبريسو"],
-        care: [
-          "بعّد على الشمس المباشرة والرطوبة",
-          "نضح الزجاج بشمالة مايكروفايبر جافة برفق",
-          "قبضها غير من الإطار",
-        ],
-        leadTime: "1–2 أسابيع",
-      },
-    },
-  },
-  {
-    id: "10",
-    name: "Ochre Study No. 3",
-    slug: "ochre-study-no-3",
-    tagline: "Three gestures, one breath.",
-    description:
-      "Three brushstrokes, three colors, one gesture repeated until it felt right. Part of a small series of studies exploring restraint — small enough for a shelf, considered enough for a wall.",
-    price: 950,
-    status: "available",
-    location: "indoor",
-    category: "Wall Art",
-    collection: "Atelier Edit",
-    materials: ["Giclée print on archival paper", "Slim oak frame"],
-    dimensions: { width: 30, depth: 2.5, height: 40, weight: 1.1 },
-    colors: ["Terracotta", "Gold", "Espresso"],
-    colorSwatches: ["#B5533C", "#C9922A", "#3D1A12"],
-    care: [
-      "Avoid direct sunlight",
-      "Dust frame with a dry cloth",
-    ],
-    leadTime: "1 week",
-    inStock: true,
-    featured: false,
-    images: ["/images/products/ochre-study-no-3-main.webp"],
-    tags: ["new", "handcrafted"],
-    stock: 12,
-    translations: {
-      fr: {
-        name: "Étude Ocre N°3",
-        tagline: "Trois gestes, un seul souffle.",
-        description: "Trois coups de pinceau, trois couleurs, un même geste répété jusqu'à ce qu'il sonne juste. Issue d'une petite série d'études sur la retenue — assez petite pour une étagère, assez réfléchie pour un mur.",
-        materials: ["Impression giclée sur papier d'archive", "Cadre fin en chêne"],
-        colors: ["Terracotta", "Or", "Expresso"],
-        care: [
-          "Évitez l'exposition directe au soleil",
-          "Dépoussiérez le cadre avec un chiffon sec",
-        ],
-        leadTime: "1 semaine",
-      },
-      ar: {
-        name: "دراسة الأوكر رقم 3",
-        tagline: "ثلاث لمسات، نفَس واحد.",
-        description: "ثلاث ضربات فرشاة، ثلاثة ألوان، حركة واحدة تكررت حتى شعرت بأنها صحيحة. جزء من سلسلة صغيرة من الدراسات حول التبسّط — صغيرة بما يكفي لرف، ومدروسة بما يكفي لجدار.",
-        materials: ["طباعة جيكليه على ورق أرشيفي", "إطار رفيع من خشب البلوط"],
-        colors: ["التراكوتا", "الذهبي", "الإسبريسو"],
-        care: [
-          "تجنب التعرض المباشر لأشعة الشمس",
-          "نظّف الإطار بقماش جاف",
-        ],
-        leadTime: "أسبوع واحد",
-      },
-      ma: {
-        name: "دراسة الأوكر رقم 3",
-        tagline: "تلاتة لمسات، نفس واحد.",
-        description: "تلاتة ضربات فرشاة، تلاتة ألوان، حركة واحدة تعاودات حتى حسّيت بلي صافية. جزء من سلسلة صغيرة ديال الدراسات حول التبسيط — صغيرة باش تتحط فوق رف، ومدروسة باش تتعلق فحيط.",
-        materials: ["طباعة جيكليه فوق ورق أرشيفي", "إطار رفيع من البلوط"],
-        colors: ["التراكوتا", "الذهبي", "الإسبريسو"],
-        care: [
-          "بعّد على الشمس المباشرة",
-          "نضح الإطار بشمالة جافة",
-        ],
-        leadTime: "سيمانة وحدة",
-      },
-    },
-  },
-];
-
-// ─── PAUSED — furniture catalog ─────────────────────────────────────────
-// Kept for reference and easy re-launch. Not part of the live `products`
-// array above, so it renders nowhere on the site right now. To bring a
-// piece back: move its object into the `products` array above.
-/*
-const pausedFurnitureCatalog: Product[] = [
-  // ─── INDOOR ───────────────────────────────────────────────
-  {
     id: "1",
-    name: "Wabi Lounge Chair",
-    slug: "wabi-lounge-chair",
-    tagline: "Sit slower. Think deeper.",
+    name: "Meridian GMT",
+    slug: "meridian-gmt",
+    tagline: "Two time zones. One instinct.",
     description:
-      "Crafted by hand in the medina workshops of Marrakech, the Wabi Lounge Chair carries the memory of ancient craftsmanship into a contemporary silhouette. Its solid walnut frame and full-grain leather seat age beautifully — becoming more yours with every season.",
+      "Built for the perpetually in-transit, the Meridian GMT tracks a second time zone on a bidirectional 24-hour bezel without ever crowding its dial. The in-house automatic caliber is chronometer-regulated, visible through a sapphire case back, and wound by a rotor cut with our meridian motif. Steel bracelet, deployant clasp, no compromises at altitude.",
     price: 8900,
     status: "available",
-    location: "indoor",
-    category: "Seating",
-    collection: "Wabi Series",
-    materials: ["Solid walnut wood", "Full-grain Moroccan leather", "Brass hardware"],
-    dimensions: { width: 72, depth: 80, height: 85, weight: 18 },
-    colors: ["Tobacco", "Sand", "Charcoal"],
+    gender: "men",
+    accessoryType: "watches",
+    subcategory: "GMT",
+    collection: "Meridian Collection",
+    materials: ["316L stainless steel case", "Sapphire crystal, both faces", "Five-link steel bracelet"],
+    specs: {
+      kind: "watches",
+      movement: "automatic",
+      caseDiameter: 41,
+      caseThickness: 12.4,
+      lugToLug: 47,
+      weight: 148,
+      waterResistance: "100m / 10 ATM",
+      powerReserve: "48 hours",
+      warranty: "5-year international warranty",
+    },
+    colors: ["Midnight Blue / Steel", "Black / Steel"],
+    colorSwatches: ["#0B1224", "#111318"],
     care: [
-      "Dust wood surfaces with a dry cloth",
-      "Condition leather every 6 months with natural wax",
-      "Avoid direct sunlight exposure",
-      "Do not use chemical cleaners on leather",
+      "Keep away from strong magnets (speakers, phone cases, clasps)",
+      "Rinse the bracelet in fresh water after seawater or sunscreen contact",
+      "Have the movement serviced every 4–5 years",
+      "Wind by hand ~30 turns if unworn for more than 36 hours",
     ],
-    leadTime: "3–4 weeks",
+    leadTime: "Ships within 24h",
     inStock: true,
     featured: true,
-    images: [
-      "/images/products/wabi-lounge-chair-main.webp",
-      "/images/products/wabi-lounge-chair-detail.webp",
-      "/images/products/wabi-lounge-chair-lifestyle.webp",
-    ],
-    tags: ["bestseller", "handcrafted", "new"],
-    stock: 4,
+    images: ["/images/products/meridian-gmt-main.webp", "/images/products/meridian-gmt-side.webp", "/images/products/meridian-gmt-wrist.webp"],
+    tags: ["bestseller", "in-house-movement"],
+    stock: 9,
+    engravingAvailable: true,
     translations: {
       fr: {
-        name: "Fauteuil Lounge Wabi",
-        tagline: "S'asseoir plus lentement. Penser plus profondément.",
-        description: "Façonné à la main dans les ateliers de la médina de Marrakech, le Fauteuil Lounge Wabi porte la mémoire de l'artisanat ancestral dans une silhouette contemporaine. Son cadre en noyer massif et son assise en cuir pleine fleur vieillissent magnifiquement — devenant davantage les vôtres à chaque saison.",
-        materials: ["Bois de noyer massif", "Cuir marocain pleine fleur", "Quincaillerie en laiton"],
-        colors: ["Tabac", "Sable", "Charbon"],
+        name: "Meridian GMT",
+        tagline: "Deux fuseaux horaires. Un seul instinct.",
+        description:
+          "Conçue pour ceux qui vivent en transit permanent, la Meridian GMT suit un second fuseau horaire sur une lunette bidirectionnelle 24h sans jamais surcharger son cadran. Le calibre automatique manufacture est réglé chronomètre, visible à travers un fond saphir, et remonté par un rotor gravé de notre motif méridien. Bracelet acier, fermoir déployant, aucun compromis en altitude.",
+        materials: ["Boîtier en acier inoxydable 316L", "Verre saphir, double face", "Bracelet acier cinq maillons"],
+        colors: ["Bleu nuit / Acier", "Noir / Acier"],
         care: [
-          "Époussetez les surfaces en bois avec un chiffon sec",
-          "Nourrissez le cuir tous les 6 mois avec de la cire naturelle",
-          "Évitez l'exposition directe au soleil",
-          "N'utilisez pas de nettoyants chimiques sur le cuir",
+          "Tenez à l'écart des champs magnétiques puissants (enceintes, étuis de téléphone, fermoirs)",
+          "Rincez le bracelet à l'eau douce après contact avec l'eau de mer ou de la crème solaire",
+          "Faites réviser le mouvement tous les 4 à 5 ans",
+          "Remontez à la main environ 30 tours si non portée plus de 36 heures",
         ],
-        leadTime: "3–4 semaines",
+        leadTime: "Expédiée sous 24h",
       },
       ar: {
-        name: "كرسي وابي للاسترخاء",
-        tagline: "اجلس بتأنٍّ. فكّر بعمق.",
-        description: "مصنوع يدوياً في ورش مدينة مراكش، يحمل كرسي وابي ذاكرة الحرفة العريقة في خطوط معاصرة. إطاره من خشب الجوز الصلب ومقعده من الجلد المغربي الطبيعي يتحسّنان مع الزمن — ليصبحا أكثر ارتباطاً بك مع كل موسم.",
-        materials: ["خشب الجوز الصلب", "الجلد المغربي الطبيعي", "تجهيزات نحاسية"],
-        colors: ["التبغ", "الرمل", "الفحم"],
+        name: "ميريديان جي إم تي",
+        tagline: "توقيتان. غريزة واحدة.",
+        description:
+          "صُممت لمن يعيشون دائماً على الطريق، تتبّع ميريديان جي إم تي توقيتاً ثانياً على لوح دوّار ثنائي الاتجاه لمدة 24 ساعة دون أن تُثقل مينائها. الحركة الأوتوماتيكية الداخلية مضبوطة بدقة الكرونومتر، ومرئية عبر ظهر ساعة من الياقوت، ويُدار دورانها بروتور محفور بزخرفة الميريديان الخاصة بنا. سوار من الفولاذ، إغلاق قابل للطي، بلا تنازلات في الارتفاعات الشاهقة.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ 316L", "زجاج ياقوتي من الجهتين", "سوار فولاذي خماسي الحلقات"],
+        colors: ["أزرق ليلي / فولاذي", "أسود / فولاذي"],
         care: [
-          "انفض الأسطح الخشبية بقماش جاف",
-          "رطّب الجلد كل 6 أشهر بالشمع الطبيعي",
-          "تجنب التعرض المباشر لأشعة الشمس",
-          "لا تستخدم منظفات كيميائية على الجلد",
+          "ابتعد عن المجالات المغناطيسية القوية (السماعات، أغطية الهاتف، الأقفال)",
+          "اشطف السوار بماء عذب بعد ملامسة مياه البحر أو واقي الشمس",
+          "قم بصيانة الحركة كل 4 إلى 5 سنوات",
+          "أدر التاج يدوياً حوالي 30 دورة إذا لم تُلبس لأكثر من 36 ساعة",
         ],
-        leadTime: "3–4 أسابيع",
+        leadTime: "تُشحن خلال 24 ساعة",
       },
       ma: {
-        name: "كرسي وابي ديال الاسترخاء",
-        tagline: "قعد بهدوء. فكر بعمق.",
-        description: "مصنوع بيدين فالأورشيات ديال المدينة بمراكش، كرسي وابي كيحمل ذاكرة الصنعة القديمة فشكل عصري. الكاركاص ديالو من الجوز الصلب والجلد المغربي الأصيل كيتحسنو مع الوقت — كيوليو ديالك أكثر مع كل فصل.",
-        materials: ["خشب الجوز الصلب", "الجلد المغربي الأصيل", "بيجو نحاسية"],
-        colors: ["التاباك", "السابلي", "الشاركول"],
+        name: "ميريديان جي إم تي",
+        tagline: "جوج توقيتات. غريزة وحدة.",
+        description:
+          "مصنوعة للناس اللي دايما فالطريق، ميريديان جي إم تي كتتبع توقيت ثاني فوق لوح دوّار ثنائي الاتجاه ديال 24 ساعة بلا ما تثقل المينا ديالها. الحركة الأوتوماتيكية الداخلية مضبوطة بدقة الكرونومتر، وبانة من ظهر الساعة الياقوتي، وكيدوّرها روتور محفور بزخرفة الميريديان ديالنا. سوار فولاذ، إغلاق قابل للطي، بلا حتى تنازل حتى فالجو الشاهق.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ 316L", "زجاج ياقوتي من الجوج الجهات", "سوار فولاذي بخمسة حلقات"],
+        colors: ["أزرق ليلي / فولاذي", "كحل / فولاذي"],
         care: [
-          "نضح السطوح الخشبية بشمالة جافة",
-          "رطّب الجلد كل 6 شهور بالشمع الطبيعي",
-          "بعّد على الشمس المباشرة",
-          "ما تستعملش منظفات كيميائية على الجلد",
+          "بعّد على المجالات المغناطيسية القوية (السماعات، أغطية التيليفون، الأقفال)",
+          "شطف السوار بالما العذبة منين يلامس ما البحر ولا الكريم ديال الشمس",
+          "دير الصيانة للحركة كل 4 إلى 5 سنين",
+          "دوّر التاج بيدك تقريبا 30 دورة إلا ما تلبستش لكثر من 36 ساعة",
         ],
-        leadTime: "3–4 أسابيع",
+        leadTime: "كتشحن فظرف 24 ساعة",
       },
     },
   },
   {
     id: "2",
-    name: "Medina Coffee Table",
-    slug: "medina-coffee-table",
-    tagline: "Where mornings begin.",
+    name: "Horizon Classique",
+    slug: "horizon-classique",
+    tagline: "Restraint is the loudest luxury.",
     description:
-      "Inspired by the geometric patterns of Moroccan zellige, the Medina Coffee Table translates centuries of craft into a minimal, functional object. The hand-poured concrete top carries natural variation — no two tables are identical.",
-    price: 5400,
+      "A dress watch stripped of everything it doesn't need. The Horizon Classique carries a domed sapphire crystal over a sunburst dial, applied champagne indices, and a case slim enough to slide under any cuff. The automatic movement inside is finished with a Côtes de Genève rotor you'll only ever see if you go looking for it — which is exactly the point.",
+    price: 6400,
     status: "available",
-    location: "indoor",
-    category: "Tables",
-    collection: "Medina Edit",
-    materials: ["Hand-poured concrete", "Blackened steel base", "Natural wax finish"],
-    dimensions: { width: 110, depth: 60, height: 38, weight: 32 },
-    colors: ["Raw Concrete", "Warm Sand"],
+    gender: "men",
+    accessoryType: "watches",
+    subcategory: "Dress",
+    collection: "Horizon Collection",
+    materials: ["316L stainless steel case", "Domed sapphire crystal", "Italian calfskin leather strap"],
+    specs: {
+      kind: "watches",
+      movement: "automatic",
+      caseDiameter: 39,
+      caseThickness: 9.8,
+      lugToLug: 46,
+      weight: 78,
+      waterResistance: "50m / 5 ATM",
+      powerReserve: "40 hours",
+      warranty: "5-year international warranty",
+    },
+    colors: ["Slate Blue / Champagne", "Ivory / Champagne"],
+    colorSwatches: ["#16213E", "#F1E9D8"],
     care: [
-      "Wipe with damp cloth only",
-      "Reseal concrete annually with provided wax",
-      "Use coasters to avoid staining",
-      "Avoid acidic liquids on surface",
+      "Avoid submerging — this is a splash-resistant dress case, not a diver",
+      "Let the leather strap rest a day between long wears",
+      "Keep away from strong magnets",
+      "Have the movement serviced every 4–5 years",
     ],
-    leadTime: "2–3 weeks",
+    leadTime: "Ships within 24h",
     inStock: true,
     featured: true,
-    images: [
-      "/images/products/medina-coffee-table-main.webp",
-      "/images/products/medina-coffee-table-detail.webp",
-    ],
-    tags: ["handcrafted", "new"],
-    stock: 4,
+    images: ["/images/products/horizon-classique-main.webp", "/images/products/horizon-classique-side.webp"],
+    tags: ["bestseller"],
+    stock: 6,
+    engravingAvailable: true,
     translations: {
       fr: {
-        name: "Table Basse Medina",
-        tagline: "Là où commencent les matins.",
-        description: "Inspirée par les motifs géométriques du zellige marocain, la Table Basse Medina traduit des siècles de savoir-faire en un objet minimal et fonctionnel. Le plateau en béton coulé à la main présente des variations naturelles — aucune table n'est identique à une autre.",
-        materials: ["Béton coulé à la main", "Pied en acier noirci", "Finition à la cire naturelle"],
-        colors: ["Béton brut", "Sable chaud"],
+        name: "Horizon Classique",
+        tagline: "La retenue est le luxe le plus éloquent.",
+        description:
+          "Une montre habillée débarrassée de tout superflu. La Horizon Classique porte un verre saphir bombé au-dessus d'un cadran soleillé, des index champagne appliqués, et un boîtier assez fin pour glisser sous n'importe quel poignet de chemise. Le mouvement automatique qu'elle abrite est fini d'un rotor Côtes de Genève que vous ne verrez que si vous allez le chercher — c'est exactement l'idée.",
+        materials: ["Boîtier en acier inoxydable 316L", "Verre saphir bombé", "Bracelet en cuir de veau italien"],
+        colors: ["Bleu ardoise / Champagne", "Ivoire / Champagne"],
         care: [
-          "Essuyez uniquement avec un chiffon humide",
-          "Rescellez le béton annuellement avec la cire fournie",
-          "Utilisez des dessous de verre pour éviter les taches",
-          "Évitez les liquides acides sur la surface",
+          "Évitez l'immersion — ce boîtier habillé résiste aux éclaboussures, pas à la plongée",
+          "Laissez le bracelet en cuir se reposer un jour entre deux longs ports",
+          "Tenez à l'écart des champs magnétiques puissants",
+          "Faites réviser le mouvement tous les 4 à 5 ans",
         ],
-        leadTime: "2–3 semaines",
+        leadTime: "Expédiée sous 24h",
       },
       ar: {
-        name: "طاولة قهوة المدينة",
-        tagline: "حيث تبدأ الصباحات.",
-        description: "مستوحاة من الأنماط الهندسية للزليج المغربي، تُترجم طاولة قهوة المدينة قروناً من الحرف اليدوية في شيء بسيط ووظيفي. السطح المصبوب يدوياً من الخرسانة يحمل تنوعاً طبيعياً — لا توجد طاولتان متماثلتان.",
-        materials: ["خرسانة مصبوبة يدوياً", "قاعدة من الفولاذ المؤكسد", "طلاء شمع طبيعي"],
-        colors: ["الخرسانة الخام", "الرمل الدافئ"],
+        name: "هورايزن كلاسيك",
+        tagline: "التبسّط هو أرقى أشكال الفخامة.",
+        description:
+          "ساعة سهرة تخلّت عن كل ما هو زائد. تحمل هورايزن كلاسيك زجاجاً ياقوتياً محدّباً فوق ميناء مشمّس، ومؤشرات شمبانيا مطبّقة، وهيكلاً رفيعاً بما يكفي للانزلاق تحت أي كم قميص. الحركة الأوتوماتيكية بداخلها منتهية بروتور Côtes de Genève لن تراه إلا إذا بحثت عنه — وهذا بالضبط هو المغزى.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ 316L", "زجاج ياقوتي محدّب", "سوار من جلد العجل الإيطالي"],
+        colors: ["أزرق أردوازي / شمبانيا", "عاجي / شمبانيا"],
         care: [
-          "امسح بقماش مبلل فقط",
-          "أعد طلاء الخرسانة سنوياً بالشمع المرفق",
-          "استخدم حوامل للأكواب لتجنب البقع",
-          "تجنب السوائل الحمضية على السطح",
+          "تجنب الغمر في الماء — هذا هيكل أنيق مقاوم للرذاذ وليس للغوص",
+          "امنح سوار الجلد يوماً للراحة بين فترات اللبس الطويلة",
+          "ابتعد عن المجالات المغناطيسية القوية",
+          "قم بصيانة الحركة كل 4 إلى 5 سنوات",
         ],
-        leadTime: "2–3 أسابيع",
+        leadTime: "تُشحن خلال 24 ساعة",
       },
       ma: {
-        name: "طابلة المدينة للقهوة",
-        tagline: "منين كيبدا الصباح.",
-        description: "مستوحاة من الأنماط الهندسية ديال الزليج المغربي، طابلة المدينة كتترجم قرون من الصنعة فشيء بسيط وعملي. السطح المصبوب باليد من البيتون فيه تنوع طبيعي — ما كاين حتى جوج طاولتين متشابهتين.",
-        materials: ["بيتون مسكوب باليد", "قاعدة من الحديد المؤكسد", "طلاء شمع طبيعي"],
-        colors: ["البيتون الخام", "الرمل الدافئ"],
+        name: "هورايزن كلاسيك",
+        tagline: "البساطة هي أعظم فخامة.",
+        description:
+          "ساعة أنيقة تخلات على كل شي زايد. هورايزن كلاسيك كتحمل زجاج ياقوتي محدّب فوق مينا مشمسة، ومؤشرات شمبانيا مركّبة، وهيكل رقيق بزاف باش يدخل تحت أي كم قميص. الحركة الأوتوماتيكية لداخل مزوقة بروتور Côtes de Genève ما غاتشوفوش إلا إلا قلبتي عليه — وهادشي هو المقصود بالضبط.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ 316L", "زجاج ياقوتي محدّب", "سوار من جلد العجل الإيطالي"],
+        colors: ["أزرق أردوازي / شمبانيا", "عاجي / شمبانيا"],
         care: [
-          "مسح بقطعة قماش مبللة فقط",
-          "تجديد طلاء البيتون كل عام بالشمع المرفق",
-          "استعمال سينيات تحت الكيوسان",
-          "بعّد على السوائل الحمضية",
+          "ما تدخلهاش للما — هاد الهيكل الأنيق مقاوم للرشّ ماشي للغطس",
+          "خلي سوار الجلد يرتاح نهار بين اللبسات الطويلة",
+          "بعّد على المجالات المغناطيسية القوية",
+          "دير الصيانة للحركة كل 4 إلى 5 سنين",
         ],
-        leadTime: "2–3 أسابيع",
+        leadTime: "كتشحن فظرف 24 ساعة",
       },
     },
   },
   {
     id: "3",
-    name: "Atlas Shelf System",
-    slug: "atlas-shelf-system",
-    tagline: "Objects deserve a stage.",
+    name: "Solstice Diver 200",
+    slug: "solstice-diver-200",
+    tagline: "Built for the deep end of the day.",
     description:
-      "The Atlas Shelf System is built for the collector, the reader, the slow thinker. Solid ashwood planks rest on adjustable blackened iron brackets, creating a modular composition that adapts to your wall and your world.",
-    price: 4200,
+      "200 meters of water resistance, a unidirectional ceramic bezel that won't scratch or fade, and a lume-charged dial that stays legible long after the sun sets on the dive. The Solstice Diver 200 wears an automatic movement shock-mounted against a screw-down crown and case back — it was tested against depth, not against a spec sheet.",
+    price: 7200,
     status: "available",
-    location: "indoor",
-    category: "Shelving",
-    collection: "Atlas Series",
-    materials: ["Solid ash wood", "Blackened iron brackets", "Raw steel hardware"],
-    dimensions: { width: 160, depth: 25, height: 120, weight: 22 },
-    colors: ["Natural Ash", "Smoked Ash"],
+    gender: "unisex",
+    accessoryType: "watches",
+    subcategory: "Diver",
+    collection: "Solstice Collection",
+    materials: ["316L stainless steel case", "Unidirectional ceramic bezel", "Rubber dive strap with steel buckle"],
+    specs: {
+      kind: "watches",
+      movement: "automatic",
+      caseDiameter: 42,
+      caseThickness: 13.2,
+      lugToLug: 48,
+      weight: 156,
+      waterResistance: "200m / 20 ATM",
+      powerReserve: "42 hours",
+      warranty: "5-year international warranty",
+    },
+    colors: ["Deep Sapphire", "Onyx Black"],
+    colorSwatches: ["#1E3FA0", "#0A0C10"],
     care: [
-      "Dust regularly with a dry cloth",
-      "Oil wood annually with linseed oil",
-      "Max load 25kg per shelf",
-      "Fix to wall studs only",
+      "Rinse in fresh water after every swim in the sea or pool",
+      "Check the crown is screwed down fully before any water exposure",
+      "Have the gaskets inspected yearly if worn for diving",
+      "Have the movement serviced every 4–5 years",
     ],
-    leadTime: "2–3 weeks",
+    leadTime: "Ships within 24h",
     inStock: true,
-    featured: false,
-    images: [
-      "/images/products/atlas-shelf-main.webp",
-      "/images/products/atlas-shelf-detail.webp",
-      "/images/products/atlas-shelf-lifestyle.webp",
-    ],
-    tags: ["handcrafted"],
-    stock: 4,
+    featured: true,
+    images: ["/images/products/solstice-diver-200-main.webp", "/images/products/solstice-diver-200-side.webp", "/images/products/solstice-diver-200-wrist.webp"],
+    tags: ["bestseller", "new"],
+    stock: 11,
+    engravingAvailable: true,
     translations: {
       fr: {
-        name: "Système d'Étagères Atlas",
-        tagline: "Les objets méritent une scène.",
-        description: "Le Système d'Étagères Atlas est conçu pour le collectionneur, le lecteur, le penseur lent. Des planches en frêne massif reposent sur des équerres en fer noirci ajustables, créant une composition modulaire qui s'adapte à votre mur et à votre univers.",
-        materials: ["Bois de frêne massif", "Équerres en fer noirci", "Quincaillerie en acier brut"],
-        colors: ["Frêne naturel", "Frêne fumé"],
+        name: "Solstice Diver 200",
+        tagline: "Conçue pour les profondeurs de la journée.",
+        description:
+          "200 mètres d'étanchéité, une lunette céramique unidirectionnelle qui ne se raye ni ne se décolore, et un cadran chargé en luminova qui reste lisible bien après le coucher du soleil sur la plongée. La Solstice Diver 200 loge un mouvement automatique monté sur amortisseurs face à une couronne et un fond vissés — elle a été testée contre la profondeur, pas contre une fiche technique.",
+        materials: ["Boîtier en acier inoxydable 316L", "Lunette céramique unidirectionnelle", "Bracelet caoutchouc de plongée, boucle acier"],
+        colors: ["Saphir profond", "Noir onyx"],
         care: [
-          "Dépoussiérez régulièrement avec un chiffon sec",
-          "Huilez le bois annuellement avec de l'huile de lin",
-          "Charge max 25 kg par étagère",
-          "Fixez uniquement aux montants du mur",
+          "Rincez à l'eau douce après chaque baignade en mer ou en piscine",
+          "Vérifiez que la couronne est bien vissée avant tout contact avec l'eau",
+          "Faites inspecter les joints chaque année en cas d'usage en plongée",
+          "Faites réviser le mouvement tous les 4 à 5 ans",
         ],
-        leadTime: "2–3 semaines",
+        leadTime: "Expédiée sous 24h",
       },
       ar: {
-        name: "نظام أرفف أطلس",
-        tagline: "الأشياء تستحق منصة عرض.",
-        description: "نظام أرفف أطلس مصمم للمقتنين والقراء والمفكرين المتأنين. ألواح خشب الدردار الصلب ترتكز على أقواس من الحديد المؤكسد القابلة للضبط، مكوّنةً تركيباً معيارياً يتكيف مع جدارك وعالمك.",
-        materials: ["خشب الدردار الصلب", "أقواس من الحديد المؤكسد", "تجهيزات من الفولاذ الخام"],
-        colors: ["الدردار الطبيعي", "الدردار المدخّن"],
+        name: "سولستيس دايفر 200",
+        tagline: "صُممت لأعماق النهار.",
+        description:
+          "مقاومة للماء حتى 200 متر، ولوح دوّار أحادي الاتجاه من السيراميك لا يُخدش ولا يبهت، وميناء مشحون باللمعان الليلي يبقى واضحاً بعد وقت طويل من غروب شمس الغوص. تحمل سولستيس دايفر 200 حركة أوتوماتيكية مثبتة بممتصات صدمات أمام تاج وظهر ساعة ملولبين — اختُبرت ضد العمق، لا ضد ورقة المواصفات.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ 316L", "لوح دوّار أحادي الاتجاه من السيراميك", "سوار مطاطي للغوص بإبزيم فولاذي"],
+        colors: ["ياقوت عميق", "أسود أونيكس"],
         care: [
-          "نظّف بانتظام بقماش جاف",
-          "ادهن الخشب سنوياً بزيت بذر الكتان",
-          "الحمولة القصوى 25 كجم لكل رف",
-          "ثبّت في الجدار بالتساميد فقط",
+          "اشطف بماء عذب بعد كل سباحة في البحر أو المسبح",
+          "تأكد من إحكام ربط التاج قبل أي تلامس مع الماء",
+          "افحص الحلقات المطاطية سنوياً إذا استُخدمت للغوص",
+          "قم بصيانة الحركة كل 4 إلى 5 سنوات",
         ],
-        leadTime: "2–3 أسابيع",
+        leadTime: "تُشحن خلال 24 ساعة",
       },
       ma: {
-        name: "نظام الرفوف أطلس",
-        tagline: "الأشياء تستاهل منصة.",
-        description: "نظام الرفوف أطلس مصنوع للمقتنين والقراء والناس اللي كيحبو يتأملو. ألواح من خشب الدردار الصلب كترتكز على بلاط من الحديد المؤكسد قابلة للضبط، كيتكوّن منهم تركيب معيار يتكيّف مع الجيط ديالك وعالمك.",
-        materials: ["خشب الدردار الصلب", "بلاط حديد مؤكسد", "بيجو من الحديد الخام"],
-        colors: ["الدردار الطبيعي", "الدردار المدخّن"],
+        name: "سولستيس دايفر 200",
+        tagline: "مصنوعة لعمق النهار.",
+        description:
+          "مقاومة للما حتى 200 متر، ولوح دوّار أحادي الاتجاه من السيراميك ما كيتخدشش وما كيبهتش، ومينا مشحونة بضوء ليلي كتبقى واضحة بعد ما تغرب الشمس ديال الغطس. سولستيس دايفر 200 كتحمل حركة أوتوماتيكية مثبتة بممتصات صدمة قدام تاج وظهر ساعة ملولبين — تجربات على العمق، ماشي غير على ورقة.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ 316L", "لوح دوّار أحادي الاتجاه من السيراميك", "سوار مطاط ديال الغطس بإبزيم فولاذي"],
+        colors: ["ياقوت عميق", "كحل أونيكس"],
         care: [
-          "نضح بشمالة جافة بانتظام",
-          "دهن الخشب بزيت الكتان مرة فالعام",
-          "الحمل الأقصى 25 كيلو للرف الواحد",
-          "تثبيت فالجدار فالتساميد فقط",
+          "شطف بالما العذبة بعد كل عومة فالبحر ولا البسين",
+          "تأكد بلي التاج مربوط مزيان قبل أي تلامس مع الما",
+          "فحص الحلقات المطاطية كل عام إلا استعملتيها للغطس",
+          "دير الصيانة للحركة كل 4 إلى 5 سنين",
         ],
-        leadTime: "2–3 أسابيع",
+        leadTime: "كتشحن فظرف 24 ساعة",
       },
     },
   },
   {
     id: "4",
-    name: "Kasbah Floor Lamp",
-    slug: "kasbah-floor-lamp",
-    tagline: "Light as atmosphere.",
+    name: "Aria Dress",
+    slug: "aria-dress",
+    tagline: "Small case. Unmissable presence.",
     description:
-      "The Kasbah Floor Lamp draws from the pierced metalwork of southern Moroccan architecture. Its perforated brass shade casts intricate shadow patterns across walls at dusk — turning any corner into a small theatre of light.",
-    price: 3800,
+      "Aria trades size for precision — a compact 32mm case set with a sunray dial that shifts from pearl to silver as the light moves across it. The bracelet is finished in a fine Milanese mesh that drapes rather than sits on the wrist. Quartz-accurate, so it's exactly on time every single morning, no winding required.",
+    price: 4800,
     status: "available",
-    location: "indoor",
-    category: "Lighting",
-    collection: "Kasbah Edit",
-    materials: ["Hand-pierced brass shade", "Solid walnut stem", "Fabric braided cord"],
-    dimensions: { width: 35, depth: 35, height: 165, weight: 7 },
-    colors: ["Antique Brass", "Brushed Chrome"],
+    gender: "women",
+    accessoryType: "watches",
+    subcategory: "Dress",
+    collection: "Horizon Collection",
+    materials: ["316L stainless steel case", "Sunray mother-of-pearl-finish dial", "Milanese mesh bracelet"],
+    specs: {
+      kind: "watches",
+      movement: "quartz",
+      caseDiameter: 32,
+      caseThickness: 7.6,
+      lugToLug: 38,
+      weight: 46,
+      waterResistance: "30m / 3 ATM",
+      warranty: "5-year international warranty",
+    },
+    colors: ["Pearl / Steel", "Rose Champagne / Steel"],
+    colorSwatches: ["#EAF0F8", "#C9A455"],
     care: [
-      "Polish brass with dry cloth only",
-      "Use max 40W E27 bulb",
-      "Keep away from moisture",
-      "Do not touch shade when lit",
+      "Not rated for swimming or showering — splash-resistant only",
+      "Wipe the mesh bracelet with a dry cloth to keep the links bright",
+      "Replace the battery every 2–3 years to avoid leakage",
+      "Keep away from strong magnets",
     ],
-    leadTime: "3–4 weeks",
-    inStock: false,
+    leadTime: "Ships within 24h",
+    inStock: true,
     featured: true,
-    images: [
-      "/images/products/kasbah-lamp-main.webp",
-      "/images/products/kasbah-lamp-detail.webp",
-      "/images/products/kasbah-lamp-lifestyle.webp",
-    ],
-    tags: ["bestseller"],
-    stock: 8,
+    images: ["/images/products/aria-dress-main.webp", "/images/products/aria-dress-wrist.webp"],
+    tags: ["new"],
+    stock: 14,
+    engravingAvailable: true,
     translations: {
       fr: {
-        name: "Lampadaire Kasbah",
-        tagline: "La lumière comme atmosphère.",
-        description: "Le Lampadaire Kasbah s'inspire du travail métallique ajouré de l'architecture du sud du Maroc. Son abat-jour en laiton perforé à la main projette des motifs d'ombres complexes sur les murs au crépuscule — transformant chaque coin en un petit théâtre de lumière.",
-        materials: ["Abat-jour en laiton perforé à la main", "Tige en noyer massif", "Cordon tressé en tissu"],
-        colors: ["Laiton antique", "Chrome brossé"],
+        name: "Aria Dress",
+        tagline: "Petit boîtier. Présence indéniable.",
+        description:
+          "Aria échange la taille contre la précision — un boîtier compact de 32 mm serti d'un cadran soleillé qui passe de la nacre à l'argent au gré de la lumière. Le bracelet est fini d'une fine maille milanaise qui drape le poignet plutôt qu'elle ne s'y pose. D'une précision quartz, elle est à l'heure exacte chaque matin, sans jamais avoir besoin d'être remontée.",
+        materials: ["Boîtier en acier inoxydable 316L", "Cadran soleillé finition nacre", "Bracelet maille milanaise"],
+        colors: ["Nacre / Acier", "Champagne rosé / Acier"],
         care: [
-          "Polissez le laiton avec un chiffon sec uniquement",
-          "Utilisez max ampoule 40W E27",
-          "Maintenez à l'écart de l'humidité",
-          "Ne touchez pas l'abat-jour lorsqu'il est allumé",
+          "Non conçue pour la natation ou la douche — résistante aux éclaboussures uniquement",
+          "Essuyez le bracelet milanais avec un chiffon sec pour garder l'éclat des mailles",
+          "Remplacez la pile tous les 2 à 3 ans pour éviter toute fuite",
+          "Tenez à l'écart des champs magnétiques puissants",
         ],
-        leadTime: "3–4 semaines",
+        leadTime: "Expédiée sous 24h",
       },
       ar: {
-        name: "مصباح قصبة الأرضي",
-        tagline: "الضوء كجوٍّ.",
-        description: "يستوحي مصباح قصبة الأرضي من النقش المعدني المخرم في عمارة جنوب المغرب. أباجورته النحاسية المثقوبة يدوياً تُلقي أنماطاً من الظلال المعقدة على الجدران عند الغسق — محوّلةً كل زاوية إلى مسرح صغير من الضوء.",
-        materials: ["أباجورة نحاسية مخرمة يدوياً", "عمود من خشب الجوز الصلب", "سلك مجدول من القماش"],
-        colors: ["النحاس العتيق", "الكروم المصقول"],
+        name: "آريا دريس",
+        tagline: "هيكل صغير. حضور لا يُخطئه أحد.",
+        description:
+          "تستبدل آريا الحجم بالدقة — هيكل مدمج بقياس 32 مم يحمل ميناءً مشمساً يتحوّل من اللؤلؤي إلى الفضي مع تحرّك الضوء عليه. السوار منتهٍ بشبك ميلانو رفيع يلتفّ حول المعصم بدل أن يستقر عليه فقط. دقة كوارتز تجعلها بالضبط في الوقت كل صباح، دون الحاجة لأي تعبئة يدوية.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ 316L", "ميناء مشمس بلمسة لؤلؤية", "سوار شبك ميلانو"],
+        colors: ["لؤلؤي / فولاذي", "شمبانيا وردي / فولاذي"],
         care: [
-          "لمّع النحاس بقماش جاف فقط",
-          "استخدم مصباح 40 واط E27 كحد أقصى",
-          "أبعد عن الرطوبة",
-          "لا تلمس الأباجورة وهي مضاءة",
+          "غير مخصصة للسباحة أو الاستحمام — مقاومة للرذاذ فقط",
+          "امسح سوار الشبك بقماش جاف للحفاظ على لمعان الحلقات",
+          "استبدل البطارية كل 2 إلى 3 سنوات لتجنب التسريب",
+          "ابتعد عن المجالات المغناطيسية القوية",
         ],
-        leadTime: "3–4 أسابيع",
+        leadTime: "تُشحن خلال 24 ساعة",
       },
       ma: {
-        name: "لامبادير قصبة",
-        tagline: "الضوء بحال الجو.",
-        description: "لامبادير قصبة مستوحى من النقش المعدني المخرم ديال العمارة الجنوبية المغربية. الأباجورة النحاسية المخرمة باليد كتصنع أنماط من الظلال على الجيطان فالغشية — كتحول كل ركيزة لمسرح صغير من الضوء.",
-        materials: ["أباجورة نحاسية مخرمة باليد", "عمود من الجوز الصلب", "كابل منسوج من القماش"],
-        colors: ["النحاس العتيق", "الكروم المصقول"],
+        name: "آريا دريس",
+        tagline: "هيكل صغير. حضور ما كيفوتوش لحد.",
+        description:
+          "آريا كتبدل الحجم بالدقة — هيكل مدمج بقياس 32 مم فيه مينا مشمسة كتبدّل من اللؤلؤي للفضي مع تحرك الضوء عليها. السوار مزوق بشبك ميلانو رقيق كيلف على المعصم ماشي غير كيتحط فوقو. دقة كوارتز كتخليها بالضبط فالوقت كل صباح، بلا ما تحتاج تعبئة بيدك.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ 316L", "مينا مشمسة بلمسة لؤلؤية", "سوار شبك ميلانو"],
+        colors: ["لؤلؤي / فولاذي", "شمبانيا وردي / فولاذي"],
         care: [
-          "لمّع النحاس بشمالة جافة فقط",
-          "استعمل أقصى 40 واط E27",
-          "بعّد على الرطوبة",
-          "ما تمسّش الأباجورة منين تكون مضاءة",
+          "ماشي مخصصة للعوم ولا الدوش — مقاومة للرشّ بركة",
+          "مسح سوار الشبك بشمالة جافة باش يبقى لمعان الحلقات",
+          "بدّل البطارية كل 2 إلى 3 سنين باش ما تسيلش",
+          "بعّد على المجالات المغناطيسية القوية",
         ],
-        leadTime: "3–4 أسابيع",
+        leadTime: "كتشحن فظرف 24 ساعة",
       },
     },
   },
   {
     id: "5",
-    name: "Sabil Ceramic Vase",
-    slug: "sabil-ceramic-vase",
-    tagline: "Emptiness as design.",
+    name: "Vector Chrono",
+    slug: "vector-chrono",
+    tagline: "Every second, accounted for.",
     description:
-      "Thrown on the wheel in a small Fès atelier, each Sabil Vase is a quiet conversation between maker and clay. Its irregular form and matte glaze absorb light differently at every hour of the day.",
-    price: 1200,
+      "A tri-compax chronograph built for reading at speed: contrasting sub-dials, a tachymeter scale on the bezel, and pushers that click with real resistance instead of springy give. Vector Chrono runs on a precision quartz chronograph movement accurate to well within a second a day — built to time things that actually matter.",
+    price: 3600,
     status: "available",
-    location: "indoor",
-    category: "Decor",
-    collection: "Sabil Objects",
-    materials: ["Hand-thrown stoneware", "Matte oxide glaze"],
-    dimensions: { width: 18, depth: 18, height: 42, weight: 2.4 },
-    colors: ["Clay White", "Olive", "Warm Charcoal"],
+    gender: "men",
+    accessoryType: "watches",
+    subcategory: "Chronograph",
+    collection: "Meridian Collection",
+    materials: ["Stainless steel case", "Tachymeter bezel", "Perforated leather racing strap"],
+    specs: {
+      kind: "watches",
+      movement: "quartz",
+      caseDiameter: 43,
+      caseThickness: 11.6,
+      lugToLug: 49,
+      weight: 112,
+      waterResistance: "100m / 10 ATM",
+      warranty: "5-year international warranty",
+    },
+    colors: ["Panda White/Black", "Full Black"],
+    colorSwatches: ["#EAF0F8", "#111318"],
     care: [
-      "Hand wash only",
-      "Not dishwasher safe",
-      "Waterproof inside — safe for fresh flowers",
-      "Handle with care, each piece is unique",
+      "Reset chronograph hands to zero before storing long-term",
+      "Rinse the strap edges after heavy sweat exposure",
+      "Replace the battery every 2–3 years to avoid leakage",
+      "Keep away from strong magnets",
     ],
-    leadTime: "1–2 weeks",
+    leadTime: "Ships within 24h",
     inStock: true,
     featured: false,
-    images: [
-      "/images/products/sabil-vase-main.webp",
-      "/images/products/sabil-vase-detail.webp",
-      "/images/products/sabil-vase-lifestyle.webp",
-    ],
-    tags: ["new", "handcrafted"],
-    stock: 6,
+    images: ["/images/products/vector-chrono-main.webp", "/images/products/vector-chrono-side.webp"],
+    tags: ["new"],
+    stock: 16,
+    engravingAvailable: true,
     translations: {
       fr: {
-        name: "Vase Céramique Sabil",
-        tagline: "Le vide comme design.",
-        description: "Tourné sur le tour dans un petit atelier de Fès, chaque Vase Sabil est une conversation tranquille entre l'artisan et l'argile. Sa forme irrégulière et sa glaçure matte absorbent la lumière différemment à chaque heure de la journée.",
-        materials: ["Grès tourné à la main", "Glaçure à l'oxyde mat"],
-        colors: ["Blanc argile", "Olive", "Charbon chaud"],
+        name: "Vector Chrono",
+        tagline: "Chaque seconde, comptée.",
+        description:
+          "Un chronographe tri-compax conçu pour se lire à toute vitesse : compteurs contrastés, échelle tachymétrique sur la lunette, et poussoirs qui cliquent avec une vraie résistance plutôt qu'un jeu élastique. Vector Chrono tourne sur un mouvement chronographe quartz de précision, exact à moins d'une seconde par jour — conçue pour chronométrer ce qui compte vraiment.",
+        materials: ["Boîtier en acier inoxydable", "Lunette tachymétrique", "Bracelet cuir perforé style course"],
+        colors: ["Panda blanc/noir", "Tout noir"],
         care: [
-          "Lavage à la main uniquement",
-          "Pas au lave-vaisselle",
-          "Étanche à l'intérieur — sûr pour les fleurs fraîches",
-          "Manipulez avec soin, chaque pièce est unique",
+          "Remettez les aiguilles du chronographe à zéro avant un stockage prolongé",
+          "Rincez les bords du bracelet après une forte exposition à la transpiration",
+          "Remplacez la pile tous les 2 à 3 ans pour éviter toute fuite",
+          "Tenez à l'écart des champs magnétiques puissants",
         ],
-        leadTime: "1–2 semaines",
+        leadTime: "Expédiée sous 24h",
       },
       ar: {
-        name: "مزهرية سبيل السيراميكية",
-        tagline: "الفراغ كتصميم.",
-        description: "مشكّل على الدولاب في ورشة صغيرة بفاس، كل مزهرية سبيل محادثة هادئة بين الصانع والطين. شكلها غير المنتظم وطلاؤها المطفأ يمتصان الضوء بشكل مختلف في كل ساعة من النهار.",
-        materials: ["فخار خشن ملوّل يدوياً", "طلاء أكسيد مطفأ"],
-        colors: ["الأبيض الطيني", "الزيتون", "الفحم الدافئ"],
+        name: "فيكتور كرونو",
+        tagline: "كل ثانية، محسوبة.",
+        description:
+          "كرونوغراف ثلاثي العدادات صُمم للقراءة بسرعة: عدادات فرعية متباينة، ومقياس تاكيمتري على اللوح، وأزرار ضغط تنقر بمقاومة حقيقية بدل الليونة المطاطية. يعمل فيكتور كرونو بحركة كرونوغراف كوارتز دقيقة تصل دقتها إلى أقل من ثانية في اليوم — صُممت لقياس ما يهم فعلاً.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ", "لوح بمقياس تاكيمتري", "سوار جلدي مثقّب بطراز السباقات"],
+        colors: ["بيضاء/سوداء (باندا)", "أسود بالكامل"],
         care: [
-          "اغسل يدوياً فقط",
-          "غير مناسب لغسالة الأطباق",
-          "مقاوم للماء من الداخل — آمن للزهور الطازجة",
-          "تعامل بحذر، كل قطعة فريدة",
+          "أعد عقارب الكرونوغراف إلى الصفر قبل التخزين لفترة طويلة",
+          "اشطف حواف السوار بعد التعرّق الشديد",
+          "استبدل البطارية كل 2 إلى 3 سنوات لتجنب التسريب",
+          "ابتعد عن المجالات المغناطيسية القوية",
         ],
-        leadTime: "1–2 أسابيع",
+        leadTime: "تُشحن خلال 24 ساعة",
       },
       ma: {
-        name: "فاز سبيل السيراميكي",
-        tagline: "الخواء بحال ديزاين.",
-        description: "مشكّل على الدولاب فورشة صغيرة بفاس، كل فاز سبيل هو محادثة هادئة بين الصانع والطين. الشكل غير المنتظم ديالو والطلاء المطفأ كيمتصو الضوء بطريقة مختلفة كل ساعة من النهار.",
-        materials: ["فخار خشن ملوّل باليد", "طلاء أكسيد مطفأ"],
-        colors: ["الأبيض الطيني", "الزيتون", "الفحم الدافئ"],
+        name: "فيكتور كرونو",
+        tagline: "كل ثانية، محسوبة.",
+        description:
+          "كرونوغراف بتلاتة عدادات مصنوع باش تقراه بسرعة: عدادات فرعية متباينة، ومقياس تاكيمتري على اللوح، وأزرار كتضغط بمقاومة حقيقية ماشي ليونة مطاطية. فيكتور كرونو كيخدم بحركة كرونوغراف كوارتز دقيقة، دقتها أقل من ثانية فالنهار — مصنوعة باش تقيس اللي فعلا مهم.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ", "لوح بمقياس تاكيمتري", "سوار جلدي مثقّب بطراز السباقات"],
+        colors: ["بيضة/كحلة (باندا)", "كحل بالكامل"],
         care: [
-          "غسل باليد فقط",
-          "ما تحطّش فغسالة الأطباق",
-          "داخله ضد الماء — مناسب للورود الطازجة",
-          "تعامل بزين، كل قطعة فريدة",
+          "رجع عقارب الكرونوغراف للصفر قبل ما تخزنها لمدة طويلة",
+          "شطف حواف السوار منين تعرّق بزاف",
+          "بدّل البطارية كل 2 إلى 3 سنين باش ما تسيلش",
+          "بعّد على المجالات المغناطيسية القوية",
         ],
-        leadTime: "1–2 أسابيع",
+        leadTime: "كتشحن فظرف 24 ساعة",
       },
     },
   },
+  {
+    id: "6",
+    name: "Nocturne Skeleton",
+    slug: "nocturne-skeleton",
+    tagline: "Nothing hidden. Everything earned.",
+    description:
+      "An open-worked mechanical caliber, hand-finished and left fully exposed front and back, so every jewel and bridge is on permanent display. Nocturne Skeleton is hand-wound — a deliberate, unhurried ritual that mirrors what it took to build the movement inside it. Limited to 200 individually numbered pieces worldwide.",
+    price: 12500,
+    status: "out-of-stock",
+    gender: "unisex",
+    accessoryType: "watches",
+    subcategory: "Skeleton",
+    collection: "Solstice Collection",
+    materials: ["Black PVD-coated steel case", "Open-worked hand-finished movement", "Genuine alligator-embossed leather strap"],
+    specs: {
+      kind: "watches",
+      movement: "mechanical",
+      caseDiameter: 40,
+      caseThickness: 10.9,
+      lugToLug: 47,
+      weight: 84,
+      waterResistance: "30m / 3 ATM",
+      powerReserve: "72 hours",
+      warranty: "5-year international warranty",
+    },
+    colors: ["Gunmetal Skeleton"],
+    colorSwatches: ["#2A2E38"],
+    care: [
+      "Hand-wind daily at roughly the same time for the most stable rate",
+      "Avoid strong shocks — the open-worked bridges are more exposed than a solid dial",
+      "Keep away from strong magnets",
+      "Have the movement serviced every 3–4 years given the exposed construction",
+    ],
+    leadTime: "Sold out — join the waitlist",
+    inStock: false,
+    featured: false,
+    images: ["/images/products/nocturne-skeleton-main.webp", "/images/products/nocturne-skeleton-side.webp"],
+    tags: ["limited-edition"],
+    stock: 0,
+    engravingAvailable: false,
+    translations: {
+      fr: {
+        name: "Nocturne Skeleton",
+        tagline: "Rien de caché. Tout mérité.",
+        description:
+          "Un calibre mécanique squelette, fini à la main et laissé entièrement visible à l'avant comme à l'arrière, pour que chaque rubis et chaque pont reste exposé en permanence. Nocturne Skeleton se remonte à la main — un rituel délibéré et sans hâte, à l'image de ce qu'a demandé la construction du mouvement qu'elle abrite. Limitée à 200 pièces numérotées individuellement dans le monde.",
+        materials: ["Boîtier en acier traité PVD noir", "Mouvement squelette fini à la main", "Bracelet cuir véritable façon alligator"],
+        colors: ["Squelette gunmetal"],
+        care: [
+          "Remontez à la main chaque jour, à peu près à la même heure, pour la marche la plus stable",
+          "Évitez les chocs violents — les ponts ajourés sont plus exposés qu'un cadran plein",
+          "Tenez à l'écart des champs magnétiques puissants",
+          "Faites réviser le mouvement tous les 3 à 4 ans compte tenu de sa construction ouverte",
+        ],
+        leadTime: "Épuisée — rejoignez la liste d'attente",
+      },
+      ar: {
+        name: "نوكتورن سكيليتون",
+        tagline: "لا شيء مخفي. كل شيء مستحق.",
+        description:
+          "حركة ميكانيكية مفرغة، منتهية يدوياً ومكشوفة بالكامل من الأمام والخلف، بحيث يبقى كل جوهرة وجسر ظاهراً بشكل دائم. تُعبّأ نوكتورن سكيليتون يدوياً — طقس متعمّد وغير متسرّع، يعكس ما تطلّبه بناء الحركة بداخلها. محدودة بـ 200 قطعة مرقّمة فردياً حول العالم.",
+        materials: ["هيكل فولاذي مطلي PVD أسود", "حركة مفرغة منتهية يدوياً", "سوار جلد طبيعي بنقشة تمساح"],
+        colors: ["مفرغة رمادية معدنية"],
+        care: [
+          "قم بالتعبئة اليدوية يومياً في نفس التوقيت تقريباً للحصول على أدق أداء",
+          "تجنب الصدمات القوية — الجسور المفتوحة أكثر عرضة من الميناء المصمت",
+          "ابتعد عن المجالات المغناطيسية القوية",
+          "قم بصيانة الحركة كل 3 إلى 4 سنوات نظراً لبنيتها المكشوفة",
+        ],
+        leadTime: "نفدت الكمية — انضم لقائمة الانتظار",
+      },
+      ma: {
+        name: "نوكتورن سكيليتون",
+        tagline: "والو ماخفي. كلشي مستاهل.",
+        description:
+          "حركة ميكانيكية مفرغة، مزوقة بالإيد وبانة بالكامل من قدام ومن لور، باش تبقى كل جوهرة وجسر ظاهرين طول الوقت. نوكتورن سكيليتون كتتعبى بالإيد — طقس متعمد وبلا تسرع، كيعكس اللي تطلبات بناء الحركة لداخلها. محدودة فـ 200 قطعة مرقمة وحدة وحدة فالعالم كامل.",
+        materials: ["هيكل فولاذي مطلي PVD كحل", "حركة مفرغة مزوقة بالإيد", "سوار جلد أصلي بنقشة تمساح"],
+        colors: ["مفرغة رمادية معدنية"],
+        care: [
+          "عبّي بالإيد كل نهار فنفس الوقت تقريبا باش يبقى الأداء ثابت",
+          "بعّد على الصدمات القوية — الجسور المفتوحة أكثر عرضة من المينا المصمتة",
+          "بعّد على المجالات المغناطيسية القوية",
+          "دير الصيانة للحركة كل 3 إلى 4 سنين حيت البنية ديالها مكشوفة",
+        ],
+        leadTime: "سالات الكمية — انضم للائحة الانتظار",
+      },
+    },
+  },
+  {
+    id: "7",
+    name: "Wanderer Field",
+    slug: "wanderer-field",
+    tagline: "The one you don't baby.",
+    description:
+      "A field watch built to the original brief: legible in bad light, tough enough for a work bag, cheap enough to actually wear every day. Matte dial, painted numerals, a domed acrylic crystal that shrugs off scratches you'd cry over on sapphire. This is the watch you reach for when the day doesn't ask permission.",
+    price: 1900,
+    status: "available",
+    gender: "unisex",
+    accessoryType: "watches",
+    subcategory: "Field",
+    collection: "Meridian Collection",
+    materials: ["Stainless steel case", "Domed acrylic crystal", "Waxed canvas strap, leather backing"],
+    specs: {
+      kind: "watches",
+      movement: "automatic",
+      caseDiameter: 40,
+      caseThickness: 11.8,
+      lugToLug: 47,
+      weight: 92,
+      waterResistance: "50m / 5 ATM",
+      powerReserve: "38 hours",
+      warranty: "2-year international warranty",
+    },
+    colors: ["Olive / Sand", "Charcoal / Black"],
+    colorSwatches: ["#4B5A47", "#2B2E33"],
+    care: [
+      "Wipe the canvas strap dry after rain or heavy sweat",
+      "Buff light scuffs on the acrylic crystal with toothpaste and a soft cloth",
+      "Keep away from strong magnets",
+      "Have the movement serviced every 4–5 years",
+    ],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: false,
+    images: ["/images/products/wanderer-field-main.webp", "/images/products/wanderer-field-wrist.webp"],
+    tags: ["new"],
+    stock: 22,
+    engravingAvailable: true,
+    translations: {
+      fr: {
+        name: "Wanderer Field",
+        tagline: "Celle qu'on ne ménage pas.",
+        description:
+          "Une montre militaire conçue selon le cahier des charges d'origine : lisible en faible lumière, assez robuste pour un sac de travail, assez abordable pour la porter vraiment tous les jours. Cadran mat, chiffres peints, verre acrylique bombé qui encaisse les rayures qui vous feraient pleurer sur du saphir. C'est la montre qu'on attrape quand la journée ne demande pas la permission.",
+        materials: ["Boîtier en acier inoxydable", "Verre acrylique bombé", "Bracelet toile cirée, doublure cuir"],
+        colors: ["Olive / Sable", "Anthracite / Noir"],
+        care: [
+          "Essuyez le bracelet en toile après la pluie ou une forte transpiration",
+          "Polissez les légères rayures sur le verre acrylique avec du dentifrice et un chiffon doux",
+          "Tenez à l'écart des champs magnétiques puissants",
+          "Faites réviser le mouvement tous les 4 à 5 ans",
+        ],
+        leadTime: "Expédiée sous 24h",
+      },
+      ar: {
+        name: "واندرر فيلد",
+        tagline: "الساعة اللي ما كتخافش عليها.",
+        description:
+          "ساعة ميدانية صُممت وفق المواصفة الأصلية: واضحة في الإضاءة الضعيفة، متينة بما يكفي لحقيبة العمل، وبسعر معقول بما يكفي لتلبسها فعلاً كل يوم. ميناء غير لامع، أرقام مطلية، وزجاج أكريليك محدّب يتحمّل خدوشاً كانت لتُبكيك على الياقوت. هذه هي الساعة التي تلجأ إليها عندما لا ينتظر اليوم إذنك.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ", "زجاج أكريليك محدّب", "سوار قماش مشمّع بطانة جلدية"],
+        colors: ["زيتوني / رملي", "رمادي غامق / أسود"],
+        care: [
+          "امسح سوار القماش وجفّفه بعد المطر أو التعرّق الشديد",
+          "لمّع الخدوش الخفيفة على الزجاج الأكريليكي بمعجون أسنان وقماش ناعم",
+          "ابتعد عن المجالات المغناطيسية القوية",
+          "قم بصيانة الحركة كل 4 إلى 5 سنوات",
+        ],
+        leadTime: "تُشحن خلال 24 ساعة",
+      },
+      ma: {
+        name: "واندرر فيلد",
+        tagline: "الساعة اللي ما كتخافش عليها.",
+        description:
+          "ساعة ميدانية مصنوعة على المواصفة الأصلية: واضحة فالضو الضعيف، قاسحة بزاف باش تدخل فساك الخدمة، ورخيصة بزاف باش تلبسها فعلا كل نهار. مينا ماهياش لامعة، أرقام مصبوغة، وزجاج أكريليك محدّب كيتحمل خدوش كانت غادي تبكيك عليها إلا كانت فالياقوت. هادي هي الساعة اللي كتقبض عليها منين النهار ما كيطلبش الإذن.",
+        materials: ["هيكل من الفولاذ المقاوم للصدأ", "زجاج أكريليك محدّب", "سوار قماش مشمّع ببطانة جلدية"],
+        colors: ["زيتوني / رملي", "رمادي غامق / كحل"],
+        care: [
+          "مسح سوار القماش ونشفو بعد الشتا ولا التعرق بزاف",
+          "لمّع الخدوش الخفيفة فوق الزجاج الأكريليكي بمعجون السنان وشمالة ناعمة",
+          "بعّد على المجالات المغناطيسية القوية",
+          "دير الصيانة للحركة كل 4 إلى 5 سنين",
+        ],
+        leadTime: "كتشحن فظرف 24 ساعة",
+      },
+    },
+  },
+
+  // ── Sunglasses ──────────────────────────────────────────
+  {
+    id: "8",
+    name: "Meridian Aviator",
+    slug: "meridian-aviator",
+    tagline: "Classic lines, zero glare.",
+    description:
+      "A titanium aviator built light enough to forget you're wearing it, with polarized lenses that cut glare without dulling color. The frame keeps its shape season after season.",
+    price: 1450,
+    status: "available",
+    gender: "unisex",
+    accessoryType: "sunglasses",
+    subcategory: "Aviator",
+    collection: "Riviera Collection",
+    materials: ["Titanium frame", "Polarized glass lenses", "Adjustable nose pads"],
+    specs: {
+      kind: "sunglasses",
+      frameWidth: 145,
+      lensWidth: 58,
+      bridgeWidth: 14,
+      templeLength: 140,
+      frameMaterial: "Titanium",
+      lensType: "Polarized",
+      uvProtection: "UV400",
+      warranty: "2-year warranty",
+    },
+    colors: ["Gunmetal / Green", "Gold / Brown"],
+    colorSwatches: ["#4A4E58", "#C9A455"],
+    care: [
+      "Rinse with fresh water after sea or pool exposure",
+      "Store in the hard case when not worn",
+      "Clean lenses with a microfiber cloth only",
+    ],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: true,
+    images: ["/images/products/meridian-aviator-main.webp"],
+    tags: ["bestseller", "new"],
+    stock: 18,
+  },
+  {
+    id: "9",
+    name: "Horizon Wayfarer",
+    slug: "horizon-wayfarer",
+    tagline: "Bold frame, quiet confidence.",
+    description:
+      "A wayfarer silhouette in hand-finished acetate, cut a touch narrower than the original for a cleaner fit. UV400 lenses, all day.",
+    price: 1250,
+    status: "available",
+    gender: "unisex",
+    accessoryType: "sunglasses",
+    subcategory: "Wayfarer",
+    collection: "Riviera Collection",
+    materials: ["Acetate frame", "UV400 lenses"],
+    specs: {
+      kind: "sunglasses",
+      frameWidth: 142,
+      lensWidth: 52,
+      bridgeWidth: 20,
+      templeLength: 145,
+      frameMaterial: "Acetate",
+      lensType: "Standard",
+      uvProtection: "UV400",
+      warranty: "2-year warranty",
+    },
+    colors: ["Tortoise", "Matte Black"],
+    colorSwatches: ["#6B4A2E", "#1A1B1E"],
+    care: [
+      "Wipe with a microfiber cloth, never a paper towel",
+      "Avoid leaving in direct heat — acetate can warp",
+    ],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: false,
+    images: ["/images/products/horizon-wayfarer-main.webp"],
+    tags: ["new"],
+    stock: 24,
+  },
+
+  // ── Eyeglasses ──────────────────────────────────────────
+  {
+    id: "10",
+    name: "Solstice Round",
+    slug: "solstice-round",
+    tagline: "Soft geometry, sharp focus.",
+    description:
+      "A round acetate frame light enough for all-day wear, ready for your prescription or worn as-is with blue-light lenses. Understated, not fussy.",
+    price: 990,
+    status: "available",
+    gender: "women",
+    accessoryType: "eyeglasses",
+    subcategory: "Round",
+    collection: "Atelier Collection",
+    materials: ["Lightweight acetate", "Prescription-ready lenses"],
+    specs: {
+      kind: "eyeglasses",
+      frameWidth: 138,
+      lensWidth: 48,
+      bridgeWidth: 19,
+      templeLength: 140,
+      frameMaterial: "Acetate",
+      lensType: "Prescription-ready",
+      warranty: "1-year warranty",
+    },
+    colors: ["Blush", "Clear Crystal"],
+    colorSwatches: ["#E8B4B8", "#F1F4F9"],
+    care: [
+      "Clean with lens spray and a microfiber cloth",
+      "Store in the case, hinges closed, when not worn",
+    ],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: true,
+    images: ["/images/products/solstice-round-main.webp"],
+    tags: ["bestseller"],
+    stock: 15,
+  },
+  {
+    id: "11",
+    name: "Vector Rectangle",
+    slug: "vector-rectangle",
+    tagline: "Clean lines for the desk and beyond.",
+    description:
+      "A stainless steel rectangle frame built for long screen days — light on the bridge, sturdy at the hinge, and ready for your prescription.",
+    price: 1050,
+    status: "available",
+    gender: "men",
+    accessoryType: "eyeglasses",
+    subcategory: "Rectangle",
+    collection: "Atelier Collection",
+    materials: ["Stainless steel frame", "Prescription-ready lenses"],
+    specs: {
+      kind: "eyeglasses",
+      frameWidth: 140,
+      lensWidth: 54,
+      bridgeWidth: 17,
+      templeLength: 145,
+      frameMaterial: "Stainless Steel",
+      lensType: "Prescription-ready",
+      warranty: "1-year warranty",
+    },
+    colors: ["Gunmetal", "Matte Black"],
+    colorSwatches: ["#4A4E58", "#1A1B1E"],
+    care: [
+      "Clean with lens spray and a microfiber cloth",
+      "Have the hinges tightened yearly if worn daily",
+    ],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: false,
+    images: ["/images/products/vector-rectangle-main.webp"],
+    tags: ["new"],
+    stock: 12,
+  },
+
+  // ── Jewelry ─────────────────────────────────────────────
+  {
+    id: "12",
+    name: "Lumière Pendant",
+    slug: "lumiere-pendant",
+    tagline: "One stone. No noise.",
+    description:
+      "A single cubic zirconia stone set on a fine gold vermeil chain — the kind of piece that works alone and layers just as well.",
+    price: 1290,
+    status: "available",
+    gender: "women",
+    accessoryType: "jewelry",
+    subcategory: "Necklace",
+    collection: "Lumière Collection",
+    materials: ["18k gold vermeil chain", "Cubic zirconia pendant"],
+    specs: {
+      kind: "jewelry",
+      metal: "18k Gold Vermeil",
+      stone: "Cubic Zirconia",
+      chainLength: 45,
+      adjustable: true,
+      hypoallergenic: true,
+      warranty: "1-year warranty",
+    },
+    colors: ["Gold"],
+    colorSwatches: ["#C9A455"],
+    sizes: ["40cm", "45cm", "50cm"],
+    care: [
+      "Remove before swimming, showering, or sleeping",
+      "Store flat in the pouch to avoid tangling",
+      "Polish gently with a soft jewelry cloth",
+    ],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: true,
+    images: ["/images/products/lumiere-pendant-main.webp"],
+    tags: ["bestseller"],
+    stock: 20,
+  },
+  {
+    id: "13",
+    name: "Horizon Chain Bracelet",
+    slug: "horizon-chain-bracelet",
+    tagline: "Layers well. Stands alone better.",
+    description:
+      "A sterling silver chain bracelet with a rhodium finish that resists tarnish — sized to sit, not swing.",
+    price: 890,
+    status: "available",
+    gender: "women",
+    accessoryType: "jewelry",
+    subcategory: "Bracelet",
+    collection: "Lumière Collection",
+    materials: ["Sterling silver", "Rhodium plating"],
+    specs: {
+      kind: "jewelry",
+      metal: "Sterling Silver",
+      adjustable: true,
+      hypoallergenic: true,
+      warranty: "1-year warranty",
+    },
+    colors: ["Silver"],
+    colorSwatches: ["#B6C2D1"],
+    sizes: ["16cm", "18cm", "20cm"],
+    care: [
+      "Remove before swimming, showering, or sleeping",
+      "Polish gently with a soft jewelry cloth",
+    ],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: false,
+    images: ["/images/products/horizon-chain-bracelet-main.webp"],
+    tags: ["new"],
+    stock: 25,
+  },
+
+  // ── Bags ────────────────────────────────────────────────
+  {
+    id: "14",
+    name: "Voyage Tote",
+    slug: "voyage-tote",
+    tagline: "Room for the whole day.",
+    description:
+      "Full-grain leather structured just enough to hold its shape, with a canvas-lined interior built for laptops, notebooks, and everything else the day requires.",
+    price: 1650,
+    status: "available",
+    gender: "women",
+    accessoryType: "bags",
+    subcategory: "Tote",
+    collection: "Voyage Collection",
+    materials: ["Full-grain leather", "Cotton canvas lining"],
+    specs: {
+      kind: "bags",
+      dimensions: { width: 38, height: 30, depth: 14 },
+      strapDrop: 22,
+      material: "Full-grain leather",
+      closureType: "Zip top",
+      interiorPockets: 3,
+      warranty: "2-year warranty",
+    },
+    colors: ["Cognac", "Black"],
+    colorSwatches: ["#8B5A2B", "#111318"],
+    care: [
+      "Condition the leather every few months",
+      "Avoid prolonged direct sunlight to prevent fading",
+      "Store stuffed with paper to hold its shape",
+    ],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: true,
+    images: ["/images/products/voyage-tote-main.webp"],
+    tags: ["bestseller"],
+    stock: 10,
+  },
+  {
+    id: "15",
+    name: "Meridian Crossbody",
+    slug: "meridian-crossbody",
+    tagline: "Small bag, sharp edit.",
+    description:
+      "Saffiano leather in a compact silhouette, with just enough room for what actually leaves the house with you. Adjustable strap, magnetic close.",
+    price: 1190,
+    status: "available",
+    gender: "women",
+    accessoryType: "bags",
+    subcategory: "Crossbody",
+    collection: "Voyage Collection",
+    materials: ["Saffiano leather", "Adjustable strap"],
+    specs: {
+      kind: "bags",
+      dimensions: { width: 20, height: 16, depth: 7 },
+      strapDrop: 55,
+      material: "Saffiano leather",
+      closureType: "Magnetic flap",
+      interiorPockets: 2,
+      warranty: "2-year warranty",
+    },
+    colors: ["Sand", "Black"],
+    colorSwatches: ["#D8C7A8", "#111318"],
+    care: [
+      "Wipe clean with a dry cloth",
+      "Avoid overloading — Saffiano keeps its texture best unstretched",
+    ],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: false,
+    images: ["/images/products/meridian-crossbody-main.webp"],
+    tags: ["new"],
+    stock: 14,
+  },
+
+  // ── Scarves ─────────────────────────────────────────────
+  {
+    id: "16",
+    name: "Sahara Silk Scarf",
+    slug: "sahara-silk-scarf",
+    tagline: "One square. Endless ways to wear it.",
+    description:
+      "100% mulberry silk with hand-rolled edges — around the neck, on a bag handle, or tied at the wrist. One square, however you wear it.",
+    price: 590,
+    status: "available",
+    gender: "women",
+    accessoryType: "scarves",
+    subcategory: "Silk",
+    collection: "Sahara Collection",
+    materials: ["100% mulberry silk", "Hand-rolled edges"],
+    specs: {
+      kind: "scarves",
+      dimensions: { length: 90, width: 90 },
+      fabric: "100% Mulberry Silk",
+      careInstructions: "Dry clean only",
+      warranty: "6-month quality guarantee",
+    },
+    colors: ["Terracotta Print", "Indigo Print"],
+    colorSwatches: ["#B5603D", "#1E3FA0"],
+    care: ["Dry clean only", "Store flat or loosely rolled, never folded on a crease"],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: true,
+    images: ["/images/products/sahara-silk-scarf-main.webp"],
+    tags: ["bestseller"],
+    stock: 30,
+  },
+  {
+    id: "17",
+    name: "Atlas Wool Scarf",
+    slug: "atlas-wool-scarf",
+    tagline: "Warm without the weight.",
+    description:
+      "A merino wool blend, woven long enough to wrap twice, soft enough to wear against bare skin. Built for a Casablanca winter, not a Siberian one.",
+    price: 490,
+    status: "available",
+    gender: "men",
+    accessoryType: "scarves",
+    subcategory: "Wool",
+    collection: "Sahara Collection",
+    materials: ["Merino wool blend"],
+    specs: {
+      kind: "scarves",
+      dimensions: { length: 180, width: 30 },
+      fabric: "Merino Wool Blend",
+      careInstructions: "Hand wash cold",
+      warranty: "6-month quality guarantee",
+    },
+    colors: ["Charcoal", "Camel"],
+    colorSwatches: ["#3A3D42", "#B08D57"],
+    care: ["Hand wash cold, lay flat to dry", "Store folded, away from direct sunlight"],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: false,
+    images: ["/images/products/atlas-wool-scarf-main.webp"],
+    tags: ["new"],
+    stock: 22,
+  },
+
+  // ── Belts ───────────────────────────────────────────────
+  {
+    id: "18",
+    name: "Heritage Leather Belt",
+    slug: "heritage-leather-belt",
+    tagline: "Ages better than you do.",
+    description:
+      "Full-grain leather on a brushed steel buckle, built to take on a patina rather than hide from one. Five sizes, one belt for years.",
+    price: 690,
+    status: "available",
+    gender: "men",
+    accessoryType: "belts",
+    subcategory: "Leather",
+    collection: "Heritage Collection",
+    materials: ["Full-grain leather", "Brushed steel buckle"],
+    specs: {
+      kind: "belts",
+      lengths: [85, 90, 95, 100, 105],
+      width: 35,
+      material: "Full-grain leather",
+      buckleType: "Pin buckle",
+      warranty: "2-year warranty",
+    },
+    colors: ["Cognac", "Black"],
+    colorSwatches: ["#8B5A2B", "#111318"],
+    care: ["Condition every few months", "Avoid prolonged water exposure"],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: true,
+    images: ["/images/products/heritage-leather-belt-main.webp"],
+    tags: ["bestseller"],
+    stock: 28,
+  },
+  {
+    id: "19",
+    name: "Duo Reversible Belt",
+    slug: "duo-reversible-belt",
+    tagline: "Two belts. One buckle.",
+    description:
+      "A rotating buckle flips between black and brown leather in one motion — one belt doing the work of two, without the bulk.",
+    price: 750,
+    status: "available",
+    gender: "men",
+    accessoryType: "belts",
+    subcategory: "Reversible",
+    collection: "Heritage Collection",
+    materials: ["Reversible leather", "Rotating buckle"],
+    specs: {
+      kind: "belts",
+      lengths: [90, 95, 100, 105, 110],
+      width: 35,
+      material: "Reversible leather",
+      buckleType: "Rotating buckle",
+      warranty: "2-year warranty",
+    },
+    colors: ["Black / Brown"],
+    colorSwatches: ["#111318"],
+    care: ["Wipe clean with a dry cloth", "Avoid prolonged water exposure"],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: false,
+    images: ["/images/products/duo-reversible-belt-main.webp"],
+    tags: ["new"],
+    stock: 16,
+  },
+
+  // ── Hats ────────────────────────────────────────────────
+  {
+    id: "20",
+    name: "Casablanca Cap",
+    slug: "casablanca-cap",
+    tagline: "Everyday, elevated.",
+    description:
+      "A cotton twill six-panel cap with clean embroidered eyelets — no logo shouting, just a shape that works with everything.",
+    price: 390,
+    status: "available",
+    gender: "unisex",
+    accessoryType: "hats",
+    subcategory: "Cap",
+    collection: "Casablanca Collection",
+    materials: ["Cotton twill", "Embroidered eyelets"],
+    specs: {
+      kind: "hats",
+      sizeRange: ["One size, adjustable"],
+      material: "Cotton Twill",
+      adjustable: true,
+      warranty: "6-month quality guarantee",
+    },
+    colors: ["Navy", "Sand"],
+    colorSwatches: ["#0F2459", "#D8C7A8"],
+    care: ["Spot clean only", "Reshape by hand while damp, air dry"],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: true,
+    images: ["/images/products/casablanca-cap-main.webp"],
+    tags: ["bestseller"],
+    stock: 35,
+  },
+  {
+    id: "21",
+    name: "Voyage Bucket Hat",
+    slug: "voyage-bucket-hat",
+    tagline: "Sun-ready, city-ready.",
+    description:
+      "A cotton canvas bucket hat with UPF 50+ coverage, cut with a slightly wider brim for actual shade — not just the look of it.",
+    price: 420,
+    status: "available",
+    gender: "women",
+    accessoryType: "hats",
+    subcategory: "Bucket",
+    collection: "Casablanca Collection",
+    materials: ["Cotton canvas", "UPF 50+"],
+    specs: {
+      kind: "hats",
+      sizeRange: ["S/M", "L/XL"],
+      material: "Cotton Canvas",
+      adjustable: false,
+      warranty: "6-month quality guarantee",
+    },
+    colors: ["Olive", "Ivory"],
+    colorSwatches: ["#4B5A47", "#F1E9D8"],
+    care: ["Spot clean only", "Do not machine wash"],
+    leadTime: "Ships within 24h",
+    inStock: true,
+    featured: false,
+    images: ["/images/products/voyage-bucket-hat-main.webp"],
+    tags: ["new"],
+    stock: 20,
+  },
 ];
-*/

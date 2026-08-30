@@ -7,8 +7,9 @@ import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSEO, useJsonLd } from "../../hooks/useSEO";
+import { SITE } from "../../config/site";
 
-const SITE_URL = "https://mipador.com";
+const SITE_URL = SITE.url;
 
 const CONTACT_LABELS: Record<string, { home: string; contact: string }> = {
   en: { home: "Home", contact: "Contact" },
@@ -32,20 +33,19 @@ const ContactPage: React.FC = () => {
           "@type": "ContactPage",
           "@id": `${SITE_URL}/${l}/contact#webpage`,
           "url": `${SITE_URL}/${l}/contact`,
-          "name": `${t("seo.contactTitle")} | Mipador`,
+          "name": `${t("seo.contactTitle")} | ${SITE.brandName}`,
           "description": t("seo.contactDesc"),
           "isPartOf": { "@id": `${SITE_URL}/#website` },
           "inLanguage": l,
         },
         {
-          "@type": ["LocalBusiness", "FurnitureStore"],
+          "@type": ["LocalBusiness", "JewelryStore"],
           "@id": `${SITE_URL}/#business`,
-          "name": "Mipador",
+          "name": SITE.brandName,
           "description":
-            "Premium contemporary furniture and home decor studio based in Casablanca, Morocco. Designed for spaces that breathe — indoor and outdoor pieces delivered across Morocco.",
+            "Accessories studio based in Casablanca, Morocco. Watches, sunglasses, jewelry and more, built on honesty, not hype — delivered across Morocco.",
           "url": `${SITE_URL}`,
-          "image": `${SITE_URL}/images/hero.webp`,
-          "logo": `${SITE_URL}/images/LogoMipadorNavBar.png`,
+          "image": `${SITE_URL}/images/og-default.jpg`,
           "address": {
             "@type": "PostalAddress",
             "addressLocality": "Casablanca",
@@ -57,7 +57,7 @@ const ContactPage: React.FC = () => {
             "latitude": 33.5731,
             "longitude": -7.5898,
           },
-          "priceRange": "MAD 1,200 – MAD 15,000",
+          "priceRange": "MAD 1,900 – MAD 12,500",
           "currenciesAccepted": "MAD",
           "paymentAccepted": "Cash on Delivery, Bank Transfer",
           "areaServed": "Morocco",
@@ -87,7 +87,7 @@ const ContactPage: React.FC = () => {
   );
   useJsonLd(schema);
   return (
-    <div className="min-h-screen bg-cream p-6 md:p-12 lg:p-24 selection:bg-clay selection:text-white">
+    <div className="min-h-screen bg-frost p-6 md:p-12 lg:p-24 selection:bg-sapphire-deep selection:text-white">
       <ScrollToTop />
       <div className="max-w-6xl mx-auto">
         <div id="hero"><ContactHero /></div>
@@ -98,8 +98,8 @@ const ContactPage: React.FC = () => {
             <div id="map"><CasablancaMap /></div>
           </div>
 
-          <div id="contact-form" className="bg-linen p-8 md:p-10 rounded-[2.5rem] border border-mist">
-            <h3 className="text-xl font-bold text-clay tracking-tight mb-8">
+          <div id="contact-form" className="bg-cloud p-8 md:p-10 rounded-[2.5rem] border border-mist">
+            <h3 className="text-xl font-bold text-sapphire-deep tracking-tight mb-8">
               Direct Message
             </h3>
             <ContactForm />

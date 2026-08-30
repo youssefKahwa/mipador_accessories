@@ -28,10 +28,10 @@ const CoreFeatures = () => {
   ];
 
   return (
-    <section className="py-24 px-6 bg-espresso-900">
+    <section className="py-24 px-6 bg-chrome-deep">
       <div className="max-w-7xl mx-auto">
         <Reveal className="text-center mb-16">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gold mb-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-champagne mb-4">
             {t("coreFeatures.eyebrow")}
           </p>
           <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
@@ -53,8 +53,8 @@ const CoreFeatures = () => {
               variants={revealItem}
               className="bg-white/5 border border-white/10 rounded-3xl p-10 hover:bg-white/8 transition-all group"
             >
-              <div className="w-12 h-12 rounded-xl bg-gold/15 flex items-center justify-center mb-8 group-hover:bg-gold/25 transition-colors">
-                <v.icon className="text-gold" size={22} />
+              <div className="w-12 h-12 rounded-xl bg-champagne/15 flex items-center justify-center mb-8 group-hover:bg-champagne/25 transition-colors">
+                <v.icon className="text-champagne" size={22} />
               </div>
               <h3 className="text-xl font-black text-white mb-4 tracking-tight">
                 {v.title}

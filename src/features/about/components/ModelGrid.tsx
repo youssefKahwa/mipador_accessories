@@ -22,16 +22,16 @@ const ModelGrid = () => {
   ];
 
   return (
-    <section className="py-24 px-6 bg-cream">
+    <section className="py-24 px-6 bg-frost">
       <div className="max-w-7xl mx-auto text-center">
         <Reveal>
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-espresso/65 mb-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-ink/65 mb-4">
             {t("modelGrid.eyebrow")}
           </p>
-          <h2 className="text-4xl md:text-5xl font-black text-espresso tracking-tight mb-4">
+          <h2 className="text-4xl md:text-5xl font-black text-ink tracking-tight mb-4">
             {t("modelGrid.heading")}
           </h2>
-          <p className="text-espresso/65 text-base mb-16 max-w-xl mx-auto leading-relaxed">
+          <p className="text-ink/65 text-base mb-16 max-w-xl mx-auto leading-relaxed">
             {t("modelGrid.body")}
           </p>
         </Reveal>
@@ -47,9 +47,9 @@ const ModelGrid = () => {
             <motion.div
               key={i}
               variants={revealItem}
-              className="bg-white border border-espresso/8 rounded-xl p-5 hover:border-gold/30 hover:bg-linen transition-all group cursor-default"
+              className="bg-surface border border-ink/8 rounded-xl p-5 hover:border-champagne/30 hover:bg-cloud transition-all group cursor-default"
             >
-              <p className="text-xs font-black text-espresso tracking-tight">
+              <p className="text-xs font-black text-ink tracking-tight">
                 {space}
               </p>
             </motion.div>

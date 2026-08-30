@@ -2,116 +2,109 @@ import React, { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useProductStore } from "../../../../store/product.store";
+import { CATEGORIES, getCategoryMeta } from "../../../../config/categories";
+import { CategoryPlaceholder } from "../../../../components/CategoryPlaceholder";
 
-// TODO: Replace hero images with dedicated indoor/outdoor lifestyle photography
-const INDOOR_HERO = "/images/products/indoor.webp";
-const OUTDOOR_HERO = "/images/products/outdoor.webp";
-
-// Representative image per subcategory — maps to the best matching product shot
-// TODO: Update each entry as dedicated category photography becomes available
-const CAT_IMAGES: Record<string, string> = {
-  "Wall Art":         "/images/products/wallart.webp",
-  "Seating":          "/images/products/seating.webp",
-  "Tables":           "/images/products/table.webp",
-  "Lighting":         "/images/products/lighting.webp",
-  "Decor":            "/images/products/decor.webp",
-  "Shelving":         "/images/products/shelving.webp",
-  "Storage":          "/images/products/storage.webp",
-  "Beds":             "/images/products/beds.webp",
-  "Outdoor Seating":  "/images/products/outdoorSeating.webp",
-  "Outdoor Tables":   "/images/products/outdoorTables.webp",
-  "Outdoor Lighting": "/images/products/outdoorLighting.webp",
-  "Outdoor Decor":    "/images/products/outdoorDecor.webp",
+const GENDER_IMAGES: Record<"men" | "women", string> = {
+  men: "/images/category-men.jpg",
+  women: "/images/category-women.jpg",
 };
 
-const INDOOR_SUBS = [
-  { key: "products.subWallArt",  value: "Wall Art" },
-  { key: "products.subSeating",  value: "Seating"  },
-  { key: "products.subTables",   value: "Tables"   },
-  { key: "products.subLighting", value: "Lighting" },
-  { key: "products.subDecor",    value: "Decor"    },
-  { key: "products.subShelving", value: "Shelving" },
-  { key: "products.subStorage",  value: "Storage"  },
-  { key: "products.subBeds",     value: "Beds"     },
-] as const;
-
-const OUTDOOR_SUBS = [
-  { key: "products.subOutdoorSeating",  value: "Outdoor Seating"  },
-  { key: "products.subOutdoorTables",   value: "Outdoor Tables"   },
-  { key: "products.subOutdoorLighting", value: "Outdoor Lighting" },
-  { key: "products.subOutdoorDecor",    value: "Outdoor Decor"    },
-] as const;
+// Watch subcategories already have real translations from the pre-rebrand
+// UI; every other line's subcategories are shown as-is (fashion terms like
+// "Aviator" or "Tote" commonly stay untranslated in retail copy anyway).
+const WATCH_SUBCATEGORY_KEYS: Record<string, string> = {
+  GMT: "products.catGMT",
+  Dress: "products.catDress",
+  Diver: "products.catDiver",
+  Chronograph: "products.catChronograph",
+  Skeleton: "products.catSkeleton",
+  Field: "products.catField",
+};
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
 const CollectionHeroTabs: React.FC = () => {
   const { t } = useTranslation();
   const {
-    locationFilter,
-    setLocationFilter,
+    genderFilter,
+    setGenderFilter,
+    selectedAccessoryType,
+    setSelectedAccessoryType,
     selectedCategory,
     setSelectedCategory,
     allProducts,
   } = useProductStore();
 
-  // Categories that contain at least one bestseller or featured product
-  const popularCategories = useMemo(
+  const subcategoryLabel = (sub: string) =>
+    WATCH_SUBCATEGORY_KEYS[sub] ? t(WATCH_SUBCATEGORY_KEYS[sub]) : sub;
+
+  // Accessory lines that contain at least one bestseller or featured product
+  const popularAccessoryTypes = useMemo(
     () =>
       new Set<string>(
         allProducts
           .filter((p) => p.tags.includes("bestseller") || p.featured)
-          .map((p) => p.category)
+          .map((p) => p.accessoryType)
       ),
     [allProducts]
   );
 
-  // Product count per category, scoped to the active location tab
-  const categoryCounts = useMemo(() => {
+  // Product count per accessory line, scoped to the active gender tab
+  const accessoryTypeCounts = useMemo(() => {
     const base =
-      locationFilter !== "all"
-        ? allProducts.filter((p) => p.location === locationFilter)
+      genderFilter !== "all"
+        ? allProducts.filter((p) => p.gender === genderFilter || p.gender === "unisex")
         : allProducts;
     return base.reduce<Record<string, number>>((acc, p) => {
-      acc[p.category] = (acc[p.category] || 0) + 1;
+      acc[p.accessoryType] = (acc[p.accessoryType] || 0) + 1;
       return acc;
     }, {});
-  }, [allProducts, locationFilter]);
+  }, [allProducts, genderFilter]);
 
-  // Product count per location — drives the "Coming Soon" ribbon on a tab
-  // that has no live pieces yet (e.g. Outdoor, while launch focuses on Wall Art)
-  const locationCounts = useMemo(
+  // Subcategory list + counts for the currently selected accessory line —
+  // drives the second-level chip row below (e.g. GMT/Dress/Diver within
+  // Watches, or Tote/Crossbody within Bags).
+  const activeCategoryMeta = selectedAccessoryType !== "All" ? getCategoryMeta(selectedAccessoryType) : undefined;
+  const subcategoryCounts = useMemo(() => {
+    if (selectedAccessoryType === "All") return {};
+    const base = allProducts.filter(
+      (p) =>
+        p.accessoryType === selectedAccessoryType &&
+        (genderFilter === "all" || p.gender === genderFilter || p.gender === "unisex")
+    );
+    return base.reduce<Record<string, number>>((acc, p) => {
+      acc[p.subcategory] = (acc[p.subcategory] || 0) + 1;
+      return acc;
+    }, {});
+  }, [allProducts, selectedAccessoryType, genderFilter]);
+
+  // Product count per gender — drives the "Coming Soon" ribbon on a tab
+  // that has no live pieces yet
+  const genderCounts = useMemo(
     () => ({
-      indoor: allProducts.filter((p) => p.location === "indoor").length,
-      outdoor: allProducts.filter((p) => p.location === "outdoor").length,
+      men: allProducts.filter((p) => p.gender === "men" || p.gender === "unisex").length,
+      women: allProducts.filter((p) => p.gender === "women" || p.gender === "unisex").length,
     }),
     [allProducts]
   );
 
-  const handleTabClick = (tab: "indoor" | "outdoor") => {
-    setLocationFilter(locationFilter === tab ? "all" : tab);
-    setSelectedCategory("All");
+  const handleTabClick = (tab: "men" | "women") => {
+    setGenderFilter(genderFilter === tab ? "all" : tab);
   };
 
-  const handleSubClick = (catValue: string) => {
-    setSelectedCategory(selectedCategory === catValue ? "All" : catValue);
+  const handleCategoryClick = (id: string) => {
+    setSelectedAccessoryType(selectedAccessoryType === id ? "All" : (id as typeof selectedAccessoryType));
   };
-
-  const activeSubs =
-    locationFilter === "indoor"
-      ? INDOOR_SUBS
-      : locationFilter === "outdoor"
-      ? OUTDOOR_SUBS
-      : [];
 
   return (
     <div className="mb-8">
 
       {/* ── Primary hero tabs ── */}
       <div className="grid grid-cols-2 gap-3 md:gap-5 mb-5">
-        {(["indoor", "outdoor"] as const).map((tab) => {
-          const isActive = locationFilter === tab;
-          const heroImg = tab === "indoor" ? INDOOR_HERO : OUTDOOR_HERO;
-          const isComingSoon = locationCounts[tab] === 0;
+        {(["men", "women"] as const).map((tab) => {
+          const isActive = genderFilter === tab;
+          const isComingSoon = genderCounts[tab] === 0;
 
           return (
             <motion.button
@@ -119,33 +112,30 @@ const CollectionHeroTabs: React.FC = () => {
               onClick={() => handleTabClick(tab)}
               whileTap={{ scale: 0.985 }}
               transition={{ duration: 0.15 }}
-              className={`relative overflow-hidden rounded-2xl h-40 sm:h-52 md:h-60 group focus-visible:outline-none ${
-                isActive ? "ring-2 ring-gold ring-offset-2 ring-offset-cream" : ""
+              className={`relative overflow-hidden rounded-md h-40 sm:h-52 md:h-60 group focus-visible:outline-none ${
+                isActive ? "ring-2 ring-champagne ring-offset-2 ring-offset-frost" : ""
               }`}
             >
-              {/* Photo */}
+              {/* Background photo */}
               <img
-                src={heroImg}
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                src={GENDER_IMAGES[tab]}
+                alt={t(tab === "men" ? "products.tabMen" : "products.tabWomen")}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
+
+              {/* Darken for text legibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-chrome-deep/80 via-chrome-deep/30 to-chrome-deep/10" />
 
               {/* Flat tint */}
               <div
                 className={`absolute inset-0 transition-colors duration-300 ${
-                  isActive
-                    ? "bg-espresso/52"
-                    : "bg-espresso/40 group-hover:bg-espresso/28"
+                  isActive ? "bg-black/10" : "bg-black/0 group-hover:bg-black/10"
                 }`}
               />
 
-              {/* Bottom-up gradient keeps label crisp */}
-              <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-espresso-950/80 to-transparent pointer-events-none" />
-
-              {/* Coming Soon ribbon — this space has no live pieces yet */}
+              {/* Coming Soon ribbon — this tab has no live pieces yet */}
               {isComingSoon && (
-                <span className="absolute top-3 right-3 z-10 px-2.5 py-1 bg-gold text-espresso text-[8.5px] sm:text-[9px] font-black uppercase tracking-widest rounded-xl shadow-sm">
+                <span className="absolute top-3 right-3 z-10 px-2.5 py-1 bg-champagne text-ink text-[8.5px] sm:text-[9px] font-black uppercase tracking-widest rounded-sm shadow-sm">
                   {t("card.comingSoon")}
                 </span>
               )}
@@ -157,24 +147,24 @@ const CollectionHeroTabs: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.4 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.25 }}
-                    className="text-gold text-base leading-none"
+                    className="text-champagne text-base leading-none"
                   >
                     ✦
                   </motion.span>
                 )}
                 <span className="text-2xl sm:text-3xl md:text-5xl font-black text-white tracking-tight leading-none">
-                  {t(tab === "indoor" ? "products.tabIndoor" : "products.tabOutdoor")}
+                  {t(tab === "men" ? "products.tabMen" : "products.tabWomen")}
                 </span>
                 <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] text-white/55 text-center">
-                  {t(tab === "indoor" ? "products.tabIndoorSub" : "products.tabOutdoorSub")}
+                  {t(tab === "men" ? "products.tabMenSub" : "products.tabWomenSub")}
                 </span>
               </div>
 
               {/* Active sliding underbar */}
               {isActive && (
                 <motion.div
-                  layoutId="locationActiveBar"
-                  className="absolute bottom-0 left-0 right-0 h-[3px] bg-gold"
+                  layoutId="genderActiveBar"
+                  className="absolute bottom-0 left-0 right-0 h-[3px] bg-champagne"
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}
@@ -183,90 +173,127 @@ const CollectionHeroTabs: React.FC = () => {
         })}
       </div>
 
-      {/* ── Subcategory visual image cards ── */}
+      {/* ── Category chips — the 8 accessory lines ── */}
       <AnimatePresence mode="wait">
-        {activeSubs.length > 0 && (
-          <motion.div
-            key={locationFilter}
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.3, ease: EASE }}
-          >
-            {/* Section label */}
-            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-espresso/65 mb-3">
-              {t("products.shopByCategory")}
-            </p>
+        <motion.div
+          key="categories"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.3, ease: EASE }}
+        >
+          {/* Section label */}
+          <p className="text-[9px] font-black uppercase tracking-[0.35em] text-ink/65 mb-3">
+            {t("products.shopByCategory")}
+          </p>
 
-            {/* Horizontal scroll on mobile, wraps on md+ */}
-            <div className="flex gap-2.5 overflow-x-auto -mx-4 px-4 pb-2 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {activeSubs.map((sub, i) => {
-                const isActive = selectedCategory === sub.value;
-                const isPopular = popularCategories.has(sub.value);
-                const count = categoryCounts[sub.value] ?? 0;
-                const isComingSoon = count === 0;
-                const img = CAT_IMAGES[sub.value] ?? INDOOR_HERO;
+          {/* Horizontal scroll on mobile, wraps on md+ */}
+          <div className="flex gap-2.5 overflow-x-auto -mx-4 px-4 pb-2 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {CATEGORIES.map((cat, i) => {
+              const isActive = selectedAccessoryType === cat.id;
+              const isPopular = popularAccessoryTypes.has(cat.id);
+              const count = accessoryTypeCounts[cat.id] ?? 0;
+              const isComingSoon = count === 0;
+
+              return (
+                <motion.button
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(cat.id)}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05, duration: 0.32, ease: EASE }}
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                  whileTap={{ scale: 0.93 }}
+                  className={`relative flex-shrink-0 w-[82px] sm:w-[96px] h-[100px] sm:h-[116px] rounded-md overflow-hidden focus-visible:outline-none transition-opacity duration-200 group ${
+                    isActive
+                      ? "ring-2 ring-champagne ring-offset-1 ring-offset-frost"
+                      : "opacity-75 hover:opacity-100"
+                  }`}
+                >
+                  {/* Background photo, or a generic lettermark where no photography exists yet */}
+                  {cat.hasPhoto ? (
+                    <img
+                      src={cat.heroImage}
+                      alt={t(cat.labelKey)}
+                      className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${isComingSoon ? "opacity-50" : ""}`}
+                    />
+                  ) : (
+                    <CategoryPlaceholder
+                      label={t(cat.labelKey)}
+                      accessoryType={cat.id}
+                      className={`absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-110 ${isComingSoon ? "opacity-50" : ""}`}
+                    />
+                  )}
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-chrome-deep/85 via-chrome-deep/15 to-transparent" />
+
+                  {/* Bestseller / featured indicator — top-right champagne star */}
+                  {isPopular && (
+                    <span className="absolute top-2 right-2 text-champagne text-[11px] leading-none drop-shadow">
+                      ★
+                    </span>
+                  )}
+
+                  {/* Active champagne dot — top-left */}
+                  {isActive && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute top-2 left-2 w-1.5 h-1.5 rounded-full bg-champagne"
+                    />
+                  )}
+
+                  {/* Label + piece count */}
+                  <div className="absolute bottom-0 left-0 right-0 px-2 pb-2.5">
+                    <span className="block text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-[0.1em] text-white leading-tight">
+                      {t(cat.labelKey)}
+                    </span>
+                    {isComingSoon ? (
+                      <span className="block text-[7px] font-black uppercase tracking-widest text-champagne mt-0.5 leading-none">
+                        {t("card.comingSoon")}
+                      </span>
+                    ) : (
+                      <span className="block text-[7px] font-bold text-white/50 mt-0.5 leading-none">
+                        {t("products.pieces", { count })}
+                      </span>
+                    )}
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* ── Subcategory chips — appears once a specific line is picked ── */}
+      <AnimatePresence>
+        {activeCategoryMeta && activeCategoryMeta.subcategories.length > 0 && (
+          <motion.div
+            key={`sub-${activeCategoryMeta.id}`}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-wrap gap-2 pt-4">
+              {activeCategoryMeta.subcategories.map((sub) => {
+                const isActive = selectedCategory === sub;
+                const count = subcategoryCounts[sub] ?? 0;
 
                 return (
-                  <motion.button
-                    key={sub.value}
-                    onClick={() => handleSubClick(sub.value)}
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05, duration: 0.32, ease: EASE }}
-                    whileHover={{ y: -3, transition: { duration: 0.2 } }}
-                    whileTap={{ scale: 0.93 }}
-                    className={`relative flex-shrink-0 w-[82px] sm:w-[96px] h-[100px] sm:h-[116px] rounded-xl overflow-hidden focus-visible:outline-none transition-opacity duration-200 group ${
+                  <button
+                    key={sub}
+                    onClick={() => setSelectedCategory(isActive ? "All" : sub)}
+                    className={`px-3.5 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-colors ${
                       isActive
-                        ? "ring-2 ring-gold ring-offset-1 ring-offset-cream"
-                        : "opacity-75 hover:opacity-100"
+                        ? "bg-ink text-white border-ink"
+                        : "border-ink/15 text-ink/65 hover:border-ink/30 hover:text-ink"
                     }`}
                   >
-                    {/* Category photo */}
-                    <img
-                      src={img}
-                      alt=""
-                      aria-hidden="true"
-                      className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${
-                        isComingSoon ? "grayscale-[0.5]" : ""
-                      }`}
-                    />
-
-                    {/* Bottom-up gradient keeps text crisp */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-espresso-950/92 via-espresso-950/25 to-transparent" />
-
-                    {/* Bestseller / featured indicator — top-right gold star */}
-                    {isPopular && (
-                      <span className="absolute top-2 right-2 text-gold text-[11px] leading-none drop-shadow">
-                        ★
-                      </span>
-                    )}
-
-                    {/* Active gold dot — top-left */}
-                    {isActive && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute top-2 left-2 w-1.5 h-1.5 rounded-full bg-gold"
-                      />
-                    )}
-
-                    {/* Label + piece count */}
-                    <div className="absolute bottom-0 left-0 right-0 px-2 pb-2.5">
-                      <span className="block text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-[0.1em] text-white leading-tight">
-                        {t(sub.key)}
-                      </span>
-                      {isComingSoon ? (
-                        <span className="block text-[7px] font-black uppercase tracking-widest text-gold mt-0.5 leading-none">
-                          {t("card.comingSoon")}
-                        </span>
-                      ) : (
-                        <span className="block text-[7px] font-bold text-white/50 mt-0.5 leading-none">
-                          {t("products.pieces", { count })}
-                        </span>
-                      )}
-                    </div>
-                  </motion.button>
+                    {subcategoryLabel(sub)}
+                    {count > 0 && <span className="ml-1.5 opacity-50">{count}</span>}
+                  </button>
                 );
               })}
             </div>

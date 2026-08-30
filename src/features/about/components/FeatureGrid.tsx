@@ -21,13 +21,13 @@ const FeatureGrid = () => {
   ];
 
   return (
-    <section className="py-24 px-6 bg-cream">
+    <section className="py-24 px-6 bg-frost">
       <div className="max-w-7xl mx-auto">
         <Reveal className="text-center mb-16">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-espresso/65 mb-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-ink/65 mb-4">
             {t("featureGrid.eyebrow")}
           </p>
-          <h2 className="text-4xl font-black text-espresso tracking-tight">
+          <h2 className="text-4xl font-black text-ink tracking-tight">
             {t("featureGrid.heading")}
           </h2>
         </Reveal>
@@ -43,16 +43,16 @@ const FeatureGrid = () => {
             <motion.div
               key={i}
               variants={revealItem}
-              className="bg-white border border-espresso/8 rounded-xl p-6 hover:bg-linen hover:border-gold/20 transition-all group"
+              className="bg-surface border border-ink/8 rounded-xl p-6 hover:bg-cloud hover:border-champagne/20 transition-all group"
             >
               <item.icon
-                className="text-gold mb-5 transition-transform group-hover:scale-110"
+                className="text-champagne mb-5 transition-transform group-hover:scale-110"
                 size={24}
               />
-              <h3 className="font-black text-espresso text-sm mb-2 tracking-tight">
+              <h3 className="font-black text-ink text-sm mb-2 tracking-tight">
                 {item.title}
               </h3>
-              <p className="text-xs text-espresso/65 leading-relaxed font-light">
+              <p className="text-xs text-ink/65 leading-relaxed font-light">
                 {item.desc}
               </p>
             </motion.div>
